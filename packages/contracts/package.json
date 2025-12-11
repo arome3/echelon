@@ -1,0 +1,23 @@
+{
+  "name": "@echelon/contracts",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Echelon smart contracts - AgentRegistry (ERC-8004) and AgentExecution",
+  "scripts": {
+    "build": "forge build",
+    "test": "forge test",
+    "test:verbose": "forge test -vvvv",
+    "test:gas": "forge test --gas-report",
+    "coverage": "forge coverage",
+    "clean": "forge clean",
+    "fmt": "forge fmt",
+    "fmt:check": "forge fmt --check",
+    "deploy": "forge script script/Deploy.s.sol --rpc-url $SEPOLIA_RPC_URL --broadcast --verify -vvvv",
+    "deploy:local": "forge script script/Deploy.s.sol --rpc-url http://localhost:8545 --broadcast -vvvv",
+    "register-agents": "forge script script/RegisterMockAgents.s.sol --rpc-url $SEPOLIA_RPC_URL --broadcast -vvvv",
+    "verify": "forge verify-contract"
+  },
+  "devDependencies": {
+    "solhint": "^4.0.0"
+  }
+}

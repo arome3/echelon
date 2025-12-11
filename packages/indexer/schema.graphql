@@ -1,0 +1,219 @@
+# ============================================
+# ECHELON INDEXER SCHEMA
+# ============================================
+
+# ============================================
+# CORE ENTITIES
+# ============================================
+
+type Agent @entity {
+  id: ID! # Agent ID from contract
+  walletAddress: String! @index # Execution wallet
+  ownerAddress: String! @index # NFT owner
+  name: String! # Human-readable name
+  strategyType: String! @index # DCA, Arbitrage, Yield, etc.
+  riskLevel: Int! # 1-10 scale
+  registeredAt: BigInt! # Unix timestamp
+  isActive: Boolean! @index # Accepting delegations
+  metadataUri: String! # IPFS/HTTPS metadata
+
+  # Performance Metrics (Computed)
+  totalExecutions: BigInt!
+  successfulExecutions: BigInt!
+  failedExecutions: BigInt!
+  pendingExecutions: BigInt!
+
+  # Volume Metrics
+  totalVolumeIn: BigDecimal! # Total input volume (wei)
+  totalVolumeOut: BigDecimal! # Total output volume (wei)
+  totalProfitLoss: BigDecimal! # Cumulative P&L (wei)
+
+  # Reputation Metrics
+  winRate: BigDecimal! # Success rate (0-1)
+  avgProfitPerTrade: BigDecimal! # Average profit per trade
+  maxDrawdown: BigDecimal! # Maximum drawdown observed
+  sharpeRatio: BigDecimal! # Risk-adjusted return
+  reputationScore: Int! # 0-100 composite score
+
+  # Timestamps
+  lastExecutionAt: BigInt # Last activity timestamp
+  updatedAt: BigInt! # Last update timestamp
+
+  # Relationships
+  executions: [Execution!]! @derivedFrom(field: "agent")
+  permissionsReceived: [Permission!]! @derivedFrom(field: "agent")
+  redelegationsAsParent: [Redelegation!]! @derivedFrom(field: "parentAgent")
+  redelegationsAsChild: [Redelegation!]! @derivedFrom(field: "childAgent")
+  dailyStats: [AgentDailyStat!]! @derivedFrom(field: "agent")
+}
+
+type Execution @entity {
+  id: ID! # executionId from contract
+  agent: Agent! # Executing agent
+  user: User! # Delegating user
+
+  # Trade Details
+  amountIn: BigDecimal! # Input amount (wei)
+  amountOut: BigDecimal! # Output amount (wei)
+  tokenIn: String! # Input token address
+  tokenOut: String! # Output token address
+  tokenInSymbol: String # Input token symbol (if known)
+  tokenOutSymbol: String # Output token symbol (if known)
+
+  # Results
+  profitLoss: BigDecimal! # amountOut - amountIn
+  profitLossPercent: BigDecimal! # Percentage gain/loss
+  result: ExecutionResult! # PENDING, SUCCESS, FAILURE
+
+  # Timing
+  startedAt: BigInt! # Unix timestamp
+  completedAt: BigInt # Unix timestamp (null if pending)
+  duration: BigInt # Execution duration in seconds
+
+  # Transaction Info
+  startTxHash: String! # Start transaction hash
+  completeTxHash: String # Complete transaction hash
+  blockNumber: BigInt! # Block number of start
+
+  # Gas Info (if available)
+  gasUsed: BigInt
+  gasPrice: BigInt
+}
+
+enum ExecutionResult {
+  PENDING
+  SUCCESS
+  FAILURE
+}
+
+type User @entity {
+  id: ID! # User wallet address
+
+  # Stats
+  totalDelegated: BigDecimal! # Total amount ever delegated
+  currentDelegated: BigDecimal! # Currently active delegations
+  activePermissions: BigInt! # Count of active permissions
+  totalPermissionsGranted: BigInt! # Total permissions ever granted
+
+  # Performance
+  totalProfitFromAgents: BigDecimal! # Total profit earned via agents
+  bestAgentUsed: Agent # Best performing agent for this user
+
+  # Timestamps
+  firstDelegationAt: BigInt # First delegation timestamp
+  lastActivityAt: BigInt # Last activity timestamp
+
+  # Relationships
+  permissions: [Permission!]! @derivedFrom(field: "user")
+  executions: [Execution!]! @derivedFrom(field: "user")
+}
+
+type Permission @entity {
+  id: ID! # Composite: user-agent-timestamp
+  user: User! # Granting user
+  agent: Agent! # Receiving agent
+
+  # Permission Parameters
+  permissionType: String! # erc20-token-periodic, etc.
+  tokenAddress: String! # Token being permitted
+  tokenSymbol: String # Token symbol
+  amountPerPeriod: BigDecimal! # Amount per period (wei)
+  periodDuration: BigInt! # Period in seconds
+  totalAmount: BigDecimal! # Maximum total (wei)
+
+  # Timing
+  grantedAt: BigInt! # Unix timestamp
+  expiresAt: BigInt! # Unix timestamp
+  revokedAt: BigInt # Unix timestamp (null if active)
+
+  # Status
+  isActive: Boolean! @index # Currently active
+  amountUsed: BigDecimal! # Amount already used (wei)
+  amountRemaining: BigDecimal! # Amount remaining (wei)
+  periodsElapsed: BigInt! # Number of periods elapsed
+
+  # Transaction Info
+  grantTxHash: String! # Grant transaction hash
+  revokeTxHash: String # Revoke transaction hash (if revoked)
+}
+
+type Redelegation @entity {
+  id: ID! # Composite ID
+  parentAgent: Agent! # Delegating (manager) agent
+  childAgent: Agent! # Receiving (specialist) agent
+  user: User! # Original user
+
+  # Delegation Parameters
+  amount: BigDecimal! # Delegated amount (wei)
+  duration: BigInt! # Duration in seconds
+
+  # Timing
+  createdAt: BigInt! # Unix timestamp
+  expiresAt: BigInt! # Unix timestamp
+
+  # Status
+  isActive: Boolean! @index
+
+  # Transaction Info
+  txHash: String!
+}
+
+# ============================================
+# ANALYTICS ENTITIES
+# ============================================
+
+type AgentDailyStat @entity {
+  id: ID! # agent-date
+  agent: Agent!
+  date: String! # YYYY-MM-DD format
+  timestamp: BigInt! # Start of day timestamp
+
+  # Daily Metrics
+  executionCount: BigInt!
+  successCount: BigInt!
+  failureCount: BigInt!
+  volumeIn: BigDecimal!
+  volumeOut: BigDecimal!
+  profitLoss: BigDecimal!
+  winRate: BigDecimal!
+
+  # Rankings
+  dailyRank: Int # Rank for this day
+}
+
+type GlobalStats @entity {
+  id: ID! # "global"
+
+  # Counts
+  totalAgents: BigInt!
+  activeAgents: BigInt!
+  totalUsers: BigInt!
+  totalExecutions: BigInt!
+  totalPermissions: BigInt!
+  activePermissions: BigInt!
+  totalRedelegations: BigInt!
+
+  # Volume
+  totalVolumeProcessed: BigDecimal!
+  totalProfitGenerated: BigDecimal!
+
+  # Timestamps
+  lastUpdated: BigInt!
+}
+
+type LeaderboardSnapshot @entity {
+  id: ID! # timestamp
+  timestamp: BigInt!
+  rankings: [LeaderboardEntry!]! @derivedFrom(field: "snapshot")
+}
+
+type LeaderboardEntry @entity {
+  id: ID! # snapshot-rank
+  snapshot: LeaderboardSnapshot!
+  agent: Agent!
+  rank: Int!
+  reputationScore: Int!
+  winRate: BigDecimal!
+  totalVolume: BigDecimal!
+  profitLoss: BigDecimal!
+}

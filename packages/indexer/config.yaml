@@ -1,0 +1,35 @@
+# Echelon Indexer Configuration
+name: echelon-indexer
+version: 1.0.0
+description: Echelon - Trustless AI Agent Marketplace Indexer
+
+networks:
+  - id: 11155111 # Sepolia
+    start_block: 0 # UPDATE: Set to contract deployment block
+    confirmed_block_threshold: 5
+    contracts:
+      - name: AgentRegistry
+        address:
+          - "0x0000000000000000000000000000000000000000" # UPDATE: Deployed contract address
+        handler: src/EventHandlers.ts
+        events:
+          - event: AgentRegistered(uint256 indexed agentId, address indexed walletAddress, string name, string strategyType, uint8 riskLevel)
+          - event: AgentUpdated(uint256 indexed agentId, string metadataUri)
+          - event: AgentDeactivated(uint256 indexed agentId)
+          - event: AgentReactivated(uint256 indexed agentId)
+
+      - name: AgentExecution
+        address:
+          - "0x0000000000000000000000000000000000000000" # UPDATE: Deployed contract address
+        handler: src/EventHandlers.ts
+        events:
+          - event: ExecutionStarted(uint256 indexed executionId, uint256 indexed agentId, address indexed userAddress, uint256 amountIn, address tokenIn, address tokenOut)
+          - event: ExecutionCompleted(uint256 indexed executionId, uint256 indexed agentId, address indexed userAddress, uint256 amountIn, uint256 amountOut, int256 profitLoss, uint8 result)
+          - event: RedelegationCreated(uint256 indexed parentAgentId, uint256 indexed childAgentId, address indexed userAddress, uint256 amount, uint256 duration)
+
+sync:
+  initial_sync_method: hypersync
+
+database:
+  sqlite:
+    path: ./data/indexer.db

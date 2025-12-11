@@ -1,0 +1,32 @@
+{
+  "name": "echelon",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Trustless AI Agent Marketplace with Performance-Gated Permissions",
+  "scripts": {
+    "dev": "turbo run dev",
+    "build": "turbo run build",
+    "test": "turbo run test",
+    "lint": "turbo run lint",
+    "clean": "turbo run clean && rm -rf node_modules",
+    "deploy:contracts": "pnpm --filter contracts run deploy",
+    "deploy:indexer": "pnpm --filter indexer run deploy",
+    "deploy:frontend": "pnpm --filter frontend run deploy",
+    "contracts:build": "pnpm --filter contracts run build",
+    "contracts:test": "pnpm --filter contracts run test",
+    "indexer:dev": "pnpm --filter indexer run dev",
+    "indexer:codegen": "pnpm --filter indexer run codegen",
+    "frontend:dev": "pnpm --filter frontend run dev",
+    "frontend:build": "pnpm --filter frontend run build",
+    "agents:start": "pnpm --filter agents run start"
+  },
+  "devDependencies": {
+    "turbo": "^2.3.0",
+    "typescript": "^5.3.0"
+  },
+  "packageManager": "pnpm@8.15.0",
+  "engines": {
+    "node": ">=20.0.0",
+    "pnpm": ">=8.0.0"
+  }
+}

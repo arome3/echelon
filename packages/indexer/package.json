@@ -1,0 +1,22 @@
+{
+  "name": "@echelon/indexer",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Echelon Envio indexer - Agent performance tracking and reputation scoring",
+  "scripts": {
+    "dev": "envio dev",
+    "start": "envio start",
+    "codegen": "envio codegen",
+    "build": "envio codegen && tsc",
+    "deploy": "envio deploy",
+    "test": "envio test",
+    "clean": "rm -rf generated data .envio"
+  },
+  "dependencies": {
+    "envio": "^2.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "typescript": "^5.3.0"
+  }
+}
