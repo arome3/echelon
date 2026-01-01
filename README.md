@@ -20,7 +20,9 @@ Echelon is a decentralized marketplace where AI agents compete for user permissi
 | Indexer | Envio HyperIndex |
 | Frontend | Next.js 14, React 18, Tailwind CSS |
 | Web3 | wagmi, viem |
-| Wallet | MetaMask Delegation Toolkit, Smart Accounts Kit |
+| Wallet | **MetaMask Flask 13.5.0+**, Smart Accounts Kit |
+
+> **Important**: This project requires [MetaMask Flask](https://metamask.io/flask/) - the developer version of MetaMask that supports experimental features like ERC-7715 Advanced Permissions. Standard MetaMask will not work.
 
 ## Project Structure
 
@@ -42,6 +44,27 @@ echelon/
 - Node.js >= 20.0.0
 - pnpm >= 8.0.0
 - Foundry (forge, cast, anvil)
+- **MetaMask Flask >= 13.5.0** (required for ERC-7715 permissions)
+
+### MetaMask Flask Setup
+
+Echelon uses ERC-7715 Advanced Permissions, which requires MetaMask Flask (not regular MetaMask).
+
+1. **Install MetaMask Flask**
+   - Download from [metamask.io/flask](https://metamask.io/flask/)
+   - Or install directly: [Chrome Web Store](https://chrome.google.com/webstore/detail/metamask-flask/ljfoeinjpaedjfecbmggjgodbgkmjkjk)
+   - **Note**: Flask and regular MetaMask cannot run simultaneously. Disable regular MetaMask first.
+
+2. **Verify Version**
+   - Open Flask → Settings → About
+   - Ensure version is **13.5.0 or higher**
+
+3. **Connect to Sepolia**
+   - Flask should auto-detect Sepolia network
+   - If not, add manually: Chain ID `11155111`, RPC: `https://sepolia.infura.io/v3/YOUR_KEY`
+
+4. **Get Test ETH**
+   - Use [Sepolia Faucet](https://sepoliafaucet.com/) to get test ETH
 
 ### Installation
 
@@ -97,6 +120,23 @@ pnpm deploy:indexer
 pnpm deploy:frontend
 ```
 
+### Oracle Sync Service
+
+The Oracle Sync service bridges reputation scores from the Envio indexer to the on-chain oracle, enabling reputation-gated permissions. See [docs/13-oracle-sync-service.md](./docs/13-oracle-sync-service.md) for full documentation.
+
+```bash
+# Quick start with PM2 (recommended)
+cd packages/agents
+cp .env.example .env  # Configure with your values
+npm install -g pm2
+npm run pm2:start
+npm run pm2:logs
+
+# Or with Docker
+docker-compose up -d oracle-sync
+docker-compose logs -f oracle-sync
+```
+
 ## Environment Variables
 
 See `.env.example` for required environment variables:
@@ -115,6 +155,8 @@ See `.env.example` for required environment variables:
 - [Permission System](./docs/04-permission-system.md)
 - [Agent Implementation](./docs/05-agent-implementation.md)
 - [A2A Delegation](./docs/06-a2a-delegation.md)
+- [Reputation System](./docs/07-reputation-system.md)
+- [Oracle Sync Service](./docs/13-oracle-sync-service.md)
 
 ## Network
 
@@ -124,9 +166,23 @@ See `.env.example` for required environment variables:
 
 ## Related Standards
 
-- [ERC-7715](https://eips.ethereum.org/EIPS/eip-7715) - Grant Permissions Standard
+- [ERC-7715](https://eips.ethereum.org/EIPS/eip-7715) - Grant Permissions Standard (requires Flask)
+- [ERC-7710](https://eips.ethereum.org/EIPS/eip-7710) - Signed Delegation Standard (A2A)
 - [ERC-8004](https://eips.ethereum.org/EIPS/eip-8004) - Agent Registry Standard
 - [ERC-721](https://eips.ethereum.org/EIPS/eip-721) - Non-Fungible Token Standard
+
+## Hackathon
+
+This project was built for the **MetaMask Advanced Permissions Hackathon**.
+
+**Tracks:**
+- Most Creative Use of Advanced Permissions
+- Best Use of Envio
+
+**Demo Requirements:**
+- MetaMask Flask 13.5.0+ installed
+- Connected to Sepolia testnet
+- Test ETH for gas fees
 
 ## License
 

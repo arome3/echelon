@@ -1,0 +1,83 @@
+# ============================================
+# Echelon - Docker Compose
+# ============================================
+# Production stack for running Echelon services:
+# - Oracle Sync Service (bridges Envio → on-chain oracle)
+# - Envio Indexer (via Envio CLI, runs separately)
+#
+# Usage:
+#   cp .env.example .env  # Configure environment
+#   docker-compose up -d  # Start services
+#   docker-compose logs -f oracle-sync  # View logs
+#
+# Note: The Envio indexer runs via `envio dev` command,
+# not Docker Compose. See packages/indexer/README.md
+# ============================================
+
+version: "3.8"
+
+services:
+  # ============================================
+  # Oracle Sync Service
+  # ============================================
+  # Syncs reputation scores from Envio indexer to on-chain oracle
+  # Runs every 5 minutes (configurable via ORACLE_SYNC_INTERVAL_MS)
+  oracle-sync:
+    build:
+      context: ./packages/agents
+      dockerfile: Dockerfile
+    container_name: echelon-oracle-sync
+    restart: unless-stopped
+    env_file:
+      - ./packages/agents/.env
+    environment:
+      - NODE_ENV=production
+      # Override sync interval (default: 5 minutes = 300000ms)
+      - ORACLE_SYNC_INTERVAL_MS=${ORACLE_SYNC_INTERVAL_MS:-300000}
+      # Maximum agents per batch transaction (default: 50)
+      - ORACLE_SYNC_BATCH_SIZE=${ORACLE_SYNC_BATCH_SIZE:-50}
+    volumes:
+      # Persist sync state across restarts
+      - oracle-sync-state:/app/state
+    healthcheck:
+      test: ["CMD", "pgrep", "-f", "oracle-sync"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    networks:
+      - echelon
+
+  # ============================================
+  # Fund Manager Agent (Optional)
+  # ============================================
+  # Run the Fund Manager agent for A2A delegation demo
+  # Uncomment to enable
+  # fund-manager:
+  #   build:
+  #     context: ./packages/agents
+  #     dockerfile: Dockerfile
+  #   container_name: echelon-fund-manager
+  #   restart: unless-stopped
+  #   env_file:
+  #     - ./packages/agents/.env
+  #   environment:
+  #     - AGENT_TYPE=FundManager
+  #   command: ["tsx", "src/index.ts"]
+  #   depends_on:
+  #     - oracle-sync
+  #   networks:
+  #     - echelon
+
+networks:
+  echelon:
+    driver: bridge
+
+volumes:
+  oracle-sync-state:
+    driver: local

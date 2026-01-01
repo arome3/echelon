@@ -2,20 +2,42 @@
   "name": "@echelon/agents",
   "version": "1.0.0",
   "private": true,
-  "description": "Echelon agents - Mock AI agents for demo",
+  "type": "module",
+  "description": "Echelon AI trading agents with Uniswap V3 integration",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
   "scripts": {
     "start": "tsx src/index.ts",
     "dev": "tsx watch src/index.ts",
+    "start:fund-manager": "AGENT_TYPE=FundManager tsx src/index.ts",
+    "start:dex-swap": "AGENT_TYPE=DexSwap tsx src/index.ts",
+    "start:oracle-sync": "tsx src/services/oracle-sync.ts",
+    "start:demo": "tsx src/demo-agent.ts",
+    "start:demo-a2a": "tsx src/demo-a2a.ts",
+    "start:delegation-fetcher": "tsx src/services/delegation-fetcher.ts",
+    "pm2:start": "pm2 start ecosystem.config.cjs",
+    "pm2:stop": "pm2 stop ecosystem.config.cjs",
+    "pm2:logs": "pm2 logs oracle-sync",
+    "pm2:status": "pm2 status",
+    "docker:build": "docker build -t echelon-oracle-sync .",
+    "docker:run": "docker run --env-file .env echelon-oracle-sync",
     "build": "tsc",
-    "clean": "rm -rf dist"
+    "typecheck": "tsc --noEmit",
+    "clean": "rm -rf dist logs"
   },
   "dependencies": {
-    "viem": "^2.0.0",
-    "dotenv": "^16.0.0"
+    "@metamask/smart-accounts-kit": "^0.2.0",
+    "@supabase/supabase-js": "^2.89.0",
+    "dotenv": "^16.0.0",
+    "permissionless": "^0.2.0",
+    "viem": "^2.0.0"
   },
   "devDependencies": {
     "@types/node": "^20.0.0",
     "tsx": "^4.0.0",
     "typescript": "^5.3.0"
+  },
+  "engines": {
+    "node": ">=20.0.0"
   }
 }

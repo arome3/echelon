@@ -17,6 +17,7 @@ node_modules/
 # ===========================================
 dist/
 build/
+docs/
 out/
 .next/
 .turbo/
@@ -73,5 +74,3 @@ coverage/
 *.tsbuildinfo
 .eslintcache
 
-docs/
-docs/
