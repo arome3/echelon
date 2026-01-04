@@ -50,14 +50,21 @@ contract AgentRegistry is
     string public constant KEY_REGISTERED_AT = "registeredAt";
     string public constant KEY_IS_ACTIVE = "isActive";
     string public constant KEY_IS_VERIFIED = "isVerified";
+    string public constant KEY_IS_ORCHESTRATOR = "isOrchestrator";
 
     // ============ Verified Agents ============
 
     /// @notice Mapping of verified agent IDs (set by contract owner)
     mapping(uint256 => bool) private _verifiedAgents;
 
+    /// @notice Mapping of orchestrator agent IDs (set by contract owner)
+    mapping(uint256 => bool) private _orchestratorAgents;
+
     /// @notice Emitted when an agent is verified
     event AgentVerified(uint256 indexed agentId, bool verified);
+
+    /// @notice Emitted when an agent is set as orchestrator
+    event AgentOrchestratorSet(uint256 indexed agentId, bool isOrchestrator);
 
     // ============ Constructor ============
 
@@ -345,6 +352,27 @@ contract AgentRegistry is
      */
     function isAgentVerified(uint256 agentId) external view returns (bool) {
         return _verifiedAgents[agentId];
+    }
+
+    /**
+     * @notice Set an agent's orchestrator status (owner only)
+     * @param agentId The agent ID to set as orchestrator
+     * @param isOrchestrator The orchestrator status
+     */
+    function setAgentOrchestrator(uint256 agentId, bool isOrchestrator) external onlyOwner {
+        require(_ownerOf(agentId) != address(0), "Agent does not exist");
+        _orchestratorAgents[agentId] = isOrchestrator;
+        _setMetadataInternal(agentId, KEY_IS_ORCHESTRATOR, abi.encode(isOrchestrator));
+        emit AgentOrchestratorSet(agentId, isOrchestrator);
+    }
+
+    /**
+     * @notice Check if an agent is an orchestrator
+     * @param agentId The agent ID to check
+     * @return isOrchestrator Whether the agent is an orchestrator
+     */
+    function isAgentOrchestrator(uint256 agentId) external view returns (bool) {
+        return _orchestratorAgents[agentId];
     }
 
     /**

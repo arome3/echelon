@@ -11,26 +11,30 @@ import "../src/interfaces/IAgentExecution.sol";
  * @notice Simulates trade executions to populate leaderboard with reputation data
  * @dev Run with: forge script script/SimulateExecutions.s.sol --rpc-url $SEPOLIA_RPC_URL --broadcast
  *
- * This creates realistic execution history for demo purposes:
- * - Fund Manager: 80% win rate, consistent profits
- * - AlphaYield: 75% win rate, high variance
- * - ArbitrageKing: 90% win rate, small profits per trade
- * - DCAWizard: 85% win rate, steady accumulation
+ * Agent Structure (matches RegisterAgents.s.sol):
+ * - Deployer (PRIVATE_KEY) = Fund Manager: PURE ORCHESTRATOR (no trades)
+ * - AGENT_1 = AlphaYield: 75% win rate, high variance (VERIFIED)
+ * - AGENT_2 = ArbitrageKing: 90% win rate, small profits
+ * - AGENT_3 = DCAWizard: 85% win rate, steady
+ * - AGENT_4 = MomentumMaster: 70% win rate, momentum style
  */
 contract SimulateExecutions is Script {
-    // Deployed contract addresses on Sepolia
-    address constant REGISTRY = 0xCCf3E485bc5339C651f4fbb8F3c37881c0D0e704;
-    address constant EXECUTION = 0x861F841b1c2EB3756E3C00840e04B9393330eDF8;
+    // Will be set from environment
+    address public EXECUTION;
 
     // Token addresses (for logging purposes)
-    address constant USDC = 0x1c7D4B196Cb0C7B01d743Fbc6116a902379C7238;
+    address constant USDC = 0x2BfBc55F4A360352Dc89e599D04898F150472cA6;
     address constant WETH = 0x7b79995e5f793A07Bc00c21412e50Ecae098E7f9;
 
     // Demo user address (simulated delegator)
     address constant DEMO_USER = 0x000000000000000000000000000000000000dEaD;
 
     function run() external {
+        // Get execution contract address from environment
+        EXECUTION = vm.envAddress("EXECUTION_ADDRESS");
+
         // Load agent private keys
+        uint256 deployerKey = vm.envUint("PRIVATE_KEY");
         uint256 agent1Key = vm.envUint("AGENT_1_PRIVATE_KEY");
         uint256 agent2Key = vm.envUint("AGENT_2_PRIVATE_KEY");
         uint256 agent3Key = vm.envUint("AGENT_3_PRIVATE_KEY");
@@ -39,35 +43,21 @@ contract SimulateExecutions is Script {
         AgentExecution execution = AgentExecution(EXECUTION);
 
         console.log("=== Simulating Agent Executions ===");
+        console.log("Execution Contract:", EXECUTION);
         console.log("");
 
         // ============================================
-        // Agent 1: Fund Manager - 80% win rate
+        // Fund Manager: PURE ORCHESTRATOR - NO TRADES
         // ============================================
-        console.log("Agent 1: Echelon Fund Manager");
+        console.log("Fund Manager: Echelon Fund Manager (Pure Orchestrator - SKIPPED)");
+        console.log("  No trades - orchestration only");
+        console.log("");
+
+        // ============================================
+        // Agent 1: AlphaYield - 75% win rate, high variance (VERIFIED)
+        // ============================================
+        console.log("Agent 1: AlphaYield");
         vm.startBroadcast(agent1Key);
-
-        // 8 wins, 2 losses
-        _simulateTrade(execution, DEMO_USER, 1000e6, 1050e6, true);   // +5%
-        _simulateTrade(execution, DEMO_USER, 1000e6, 1080e6, true);   // +8%
-        _simulateTrade(execution, DEMO_USER, 1000e6, 950e6, false);   // -5%
-        _simulateTrade(execution, DEMO_USER, 1000e6, 1120e6, true);   // +12%
-        _simulateTrade(execution, DEMO_USER, 1000e6, 1030e6, true);   // +3%
-        _simulateTrade(execution, DEMO_USER, 1000e6, 1065e6, true);   // +6.5%
-        _simulateTrade(execution, DEMO_USER, 1000e6, 920e6, false);   // -8%
-        _simulateTrade(execution, DEMO_USER, 1000e6, 1045e6, true);   // +4.5%
-        _simulateTrade(execution, DEMO_USER, 1000e6, 1090e6, true);   // +9%
-        _simulateTrade(execution, DEMO_USER, 1000e6, 1025e6, true);   // +2.5%
-
-        vm.stopBroadcast();
-        console.log("  Completed 10 trades (8 wins, 2 losses)");
-        console.log("");
-
-        // ============================================
-        // Agent 2: AlphaYield - 75% win rate, high variance
-        // ============================================
-        console.log("Agent 2: AlphaYield");
-        vm.startBroadcast(agent2Key);
 
         // 6 wins, 2 losses (high variance)
         _simulateTrade(execution, DEMO_USER, 500e6, 650e6, true);    // +30%
@@ -84,10 +74,10 @@ contract SimulateExecutions is Script {
         console.log("");
 
         // ============================================
-        // Agent 3: ArbitrageKing - 90% win rate, small profits
+        // Agent 2: ArbitrageKing - 90% win rate, small profits
         // ============================================
-        console.log("Agent 3: ArbitrageKing");
-        vm.startBroadcast(agent3Key);
+        console.log("Agent 2: ArbitrageKing");
+        vm.startBroadcast(agent2Key);
 
         // 9 wins, 1 loss (small but consistent)
         _simulateTrade(execution, DEMO_USER, 2000e6, 2020e6, true);   // +1%
@@ -106,10 +96,10 @@ contract SimulateExecutions is Script {
         console.log("");
 
         // ============================================
-        // Agent 4: DCAWizard - 85% win rate, steady
+        // Agent 3: DCAWizard - 85% win rate, steady
         // ============================================
-        console.log("Agent 4: DCAWizard");
-        vm.startBroadcast(agent4Key);
+        console.log("Agent 3: DCAWizard");
+        vm.startBroadcast(agent3Key);
 
         // 6 wins, 1 loss (DCA style)
         _simulateTrade(execution, DEMO_USER, 100e6, 105e6, true);    // +5%
@@ -124,17 +114,38 @@ contract SimulateExecutions is Script {
         console.log("  Completed 7 trades (6 wins, 1 loss)");
         console.log("");
 
+        // ============================================
+        // Agent 4: MomentumMaster - 70% win rate, momentum style
+        // ============================================
+        console.log("Agent 4: MomentumMaster");
+        vm.startBroadcast(agent4Key);
+
+        // 7 wins, 3 losses (momentum trading)
+        _simulateTrade(execution, DEMO_USER, 800e6, 920e6, true);    // +15%
+        _simulateTrade(execution, DEMO_USER, 800e6, 880e6, true);    // +10%
+        _simulateTrade(execution, DEMO_USER, 800e6, 720e6, false);   // -10%
+        _simulateTrade(execution, DEMO_USER, 800e6, 960e6, true);    // +20%
+        _simulateTrade(execution, DEMO_USER, 800e6, 850e6, true);    // +6.25%
+        _simulateTrade(execution, DEMO_USER, 800e6, 700e6, false);   // -12.5%
+        _simulateTrade(execution, DEMO_USER, 800e6, 900e6, true);    // +12.5%
+        _simulateTrade(execution, DEMO_USER, 800e6, 680e6, false);   // -15%
+        _simulateTrade(execution, DEMO_USER, 800e6, 1000e6, true);   // +25%
+        _simulateTrade(execution, DEMO_USER, 800e6, 870e6, true);    // +8.75%
+
+        vm.stopBroadcast();
+        console.log("  Completed 10 trades (7 wins, 3 losses)");
+        console.log("");
+
         console.log("=== Execution Simulation Complete ===");
         console.log("");
         console.log("Summary:");
-        console.log("  Fund Manager:   10 trades, 80% win rate");
-        console.log("  AlphaYield:      8 trades, 75% win rate");
+        console.log("  Fund Manager:    0 trades (pure orchestrator)");
+        console.log("  AlphaYield:      8 trades, 75% win rate (VERIFIED)");
         console.log("  ArbitrageKing:  10 trades, 90% win rate");
         console.log("  DCAWizard:       7 trades, 86% win rate");
+        console.log("  MomentumMaster: 10 trades, 70% win rate");
         console.log("");
         console.log("Total executions: 35");
-        console.log("");
-        console.log("Next: Start Envio indexer to compute reputation scores");
     }
 
     function _simulateTrade(

@@ -8,12 +8,22 @@ import "../src/AgentRegistry.sol";
  * @title RegisterAgents
  * @notice Registers demo agents for hackathon demonstration
  * @dev Run with: forge script script/RegisterAgents.s.sol --rpc-url $SEPOLIA_RPC_URL --broadcast
+ *
+ * Agent Structure:
+ * - Deployer wallet (PRIVATE_KEY) = Fund Manager (pure orchestrator, no trades)
+ * - AGENT_1 = AlphaYield (Yield specialist, VERIFIED)
+ * - AGENT_2 = ArbitrageKing (Arbitrage specialist)
+ * - AGENT_3 = DCAWizard (DCA specialist)
+ * - AGENT_4 = MomentumMaster (Momentum specialist)
  */
 contract RegisterAgents is Script {
-    // Deployed AgentRegistry address on Sepolia
-    address constant REGISTRY = 0xCCf3E485bc5339C651f4fbb8F3c37881c0D0e704;
+    // Will be set after deployment
+    address public REGISTRY;
 
     function run() external {
+        // Get registry address from environment (set after Deploy.s.sol)
+        REGISTRY = vm.envAddress("REGISTRY_ADDRESS");
+
         // Load private keys from environment
         uint256 deployerKey = vm.envUint("PRIVATE_KEY");
         uint256 agent1Key = vm.envUint("AGENT_1_PRIVATE_KEY");
@@ -22,6 +32,7 @@ contract RegisterAgents is Script {
         uint256 agent4Key = vm.envUint("AGENT_4_PRIVATE_KEY");
 
         // Derive wallet addresses from private keys
+        address deployerWallet = vm.addr(deployerKey);
         address agent1Wallet = vm.addr(agent1Key);
         address agent2Wallet = vm.addr(agent2Key);
         address agent3Wallet = vm.addr(agent3Key);
@@ -29,10 +40,13 @@ contract RegisterAgents is Script {
 
         console.log("=== Echelon Demo Agent Registration ===");
         console.log("");
-        console.log("Agent 1 Wallet:", agent1Wallet);
-        console.log("Agent 2 Wallet:", agent2Wallet);
-        console.log("Agent 3 Wallet:", agent3Wallet);
-        console.log("Agent 4 Wallet:", agent4Wallet);
+        console.log("Registry:", REGISTRY);
+        console.log("");
+        console.log("Fund Manager Wallet (Deployer):", deployerWallet);
+        console.log("Agent 1 Wallet (AlphaYield):", agent1Wallet);
+        console.log("Agent 2 Wallet (ArbitrageKing):", agent2Wallet);
+        console.log("Agent 3 Wallet (DCAWizard):", agent3Wallet);
+        console.log("Agent 4 Wallet (MomentumMaster):", agent4Wallet);
         console.log("");
 
         AgentRegistry registry = AgentRegistry(REGISTRY);
@@ -40,72 +54,88 @@ contract RegisterAgents is Script {
         vm.startBroadcast(deployerKey);
 
         // ============================================
-        // Agent 1: Echelon Fund Manager (A2A Manager)
+        // Fund Manager: Echelon Fund Manager (Pure Orchestrator)
+        // Uses DEPLOYER wallet - orchestrates specialists, does NOT trade directly
         // ============================================
-        // This is the main Fund Manager that users delegate to
-        // It then re-delegates to specialist agents (A2A flow)
-        uint256 agent1Id = registry.registerAgent(
-            agent1Wallet,
+        uint256 fundManagerId = registry.registerAgent(
+            deployerWallet,
             "Echelon Fund Manager",
-            "Yield",
-            5,  // Medium risk - balanced portfolio
+            "MeanReversion",  // Strategy type for orchestrator
+            5,  // Medium risk - balanced portfolio allocation
             "ipfs://QmFundManager"
         );
-        console.log("Registered Agent 1: Echelon Fund Manager (ID:", agent1Id, ")");
+        console.log("Registered Fund Manager (ID:", fundManagerId, ") - Pure Orchestrator");
 
         // ============================================
-        // Agent 2: AlphaYield (Yield Specialist)
+        // Agent 1: AlphaYield (Yield Specialist)
         // ============================================
-        // Specialist agent that Fund Manager delegates yield strategies to
-        uint256 agent2Id = registry.registerAgent(
-            agent2Wallet,
+        uint256 agent1Id = registry.registerAgent(
+            agent1Wallet,
             "AlphaYield",
             "Yield",
             7,  // Higher risk - aggressive yield farming
             "ipfs://QmAlphaYield"
         );
-        console.log("Registered Agent 2: AlphaYield (ID:", agent2Id, ")");
+        console.log("Registered AlphaYield (ID:", agent1Id, ")");
 
         // ============================================
-        // Agent 3: ArbitrageKing (Arbitrage Specialist)
+        // Agent 2: ArbitrageKing (Arbitrage Specialist)
         // ============================================
-        // Specialist for cross-DEX arbitrage opportunities
-        uint256 agent3Id = registry.registerAgent(
-            agent3Wallet,
+        uint256 agent2Id = registry.registerAgent(
+            agent2Wallet,
             "ArbitrageKing",
             "Arbitrage",
             8,  // High risk - fast-paced arbitrage
             "ipfs://QmArbitrageKing"
         );
-        console.log("Registered Agent 3: ArbitrageKing (ID:", agent3Id, ")");
+        console.log("Registered ArbitrageKing (ID:", agent2Id, ")");
 
         // ============================================
-        // Agent 4: DCAWizard (DCA Specialist)
+        // Agent 3: DCAWizard (DCA Specialist)
         // ============================================
-        // Specialist for dollar-cost averaging strategies
-        uint256 agent4Id = registry.registerAgent(
-            agent4Wallet,
+        uint256 agent3Id = registry.registerAgent(
+            agent3Wallet,
             "DCAWizard",
             "DCA",
             3,  // Low risk - steady accumulation
             "ipfs://QmDCAWizard"
         );
-        console.log("Registered Agent 4: DCAWizard (ID:", agent4Id, ")");
+        console.log("Registered DCAWizard (ID:", agent3Id, ")");
 
-        // Verify Fund Manager for trust badge
-        registry.setAgentVerified(agent1Id, true);
+        // ============================================
+        // Agent 4: MomentumMaster (Momentum Specialist)
+        // ============================================
+        uint256 agent4Id = registry.registerAgent(
+            agent4Wallet,
+            "MomentumMaster",
+            "Momentum",
+            6,  // Medium-high risk - trend following
+            "ipfs://QmMomentumMaster"
+        );
+        console.log("Registered MomentumMaster (ID:", agent4Id, ")");
+
+        // Set Fund Manager as orchestrator (orchestration badge)
+        registry.setAgentOrchestrator(fundManagerId, true);
         console.log("");
-        console.log("Fund Manager verified with trust badge");
+        console.log("Fund Manager set as orchestrator (orchestration badge)");
+
+        // Verify AlphaYield as platform-verified specialist
+        registry.setAgentVerified(agent1Id, true);
+        console.log("AlphaYield verified as platform-verified specialist");
 
         vm.stopBroadcast();
 
         console.log("");
         console.log("=== Registration Complete ===");
-        console.log("Total agents registered: 4");
+        console.log("Total agents registered: 5 (1 Fund Manager + 4 Specialists)");
+        console.log("Fund Manager: Orchestrator badge (no trades)");
+        console.log("AlphaYield: Verified badge (trading specialist)");
         console.log("");
-        console.log("Next steps:");
-        console.log("1. Run SimulateExecutions.s.sol to create execution history");
-        console.log("2. Start Envio indexer to index events");
-        console.log("3. Verify leaderboard shows agents with reputation scores");
+        console.log("Agent IDs:");
+        console.log("  Fund Manager: ID", fundManagerId);
+        console.log("  AlphaYield:   ID", agent1Id);
+        console.log("  ArbitrageKing: ID", agent2Id);
+        console.log("  DCAWizard:    ID", agent3Id);
+        console.log("  MomentumMaster: ID", agent4Id);
     }
 }

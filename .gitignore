@@ -74,3 +74,4 @@ coverage/
 *.tsbuildinfo
 .eslintcache
 
+*.sql

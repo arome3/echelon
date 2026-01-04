@@ -1,35 +1,89 @@
 # Echelon Indexer Configuration
 name: echelon-indexer
-version: 1.0.0
-description: Echelon - Trustless AI Agent Marketplace Indexer
+description: Echelon - Trustless AI Agent Marketplace Indexer with ERC-8004 Reputation & Validation
 
 networks:
   - id: 11155111 # Sepolia
-    start_block: 0 # UPDATE: Set to contract deployment block
+    start_block: 9964518 # Contract deployment block (Jan 2, 2026 - with orchestrator)
     confirmed_block_threshold: 5
     contracts:
+      # ============================================
+      # IDENTITY REGISTRY (ERC-8004)
+      # ============================================
       - name: AgentRegistry
         address:
-          - "0x0000000000000000000000000000000000000000" # UPDATE: Deployed contract address
+          - "0x9d60b078a01bD8afE7A4d8E2cEd02fcDb2Af1848" # Deployed Jan 2, 2026
         handler: src/EventHandlers.ts
         events:
           - event: AgentRegistered(uint256 indexed agentId, address indexed walletAddress, string name, string strategyType, uint8 riskLevel)
           - event: AgentUpdated(uint256 indexed agentId, string metadataUri)
           - event: AgentDeactivated(uint256 indexed agentId)
           - event: AgentReactivated(uint256 indexed agentId)
+          - event: AgentVerified(uint256 indexed agentId, bool verified)
+          - event: AgentOrchestratorSet(uint256 indexed agentId, bool isOrchestrator)
 
+      # ============================================
+      # EXECUTION LOGGER
+      # ============================================
       - name: AgentExecution
         address:
-          - "0x0000000000000000000000000000000000000000" # UPDATE: Deployed contract address
+          - "0x0D2871A9BbF7e76De188A480Dc823d7681397dD8" # Deployed Jan 2, 2026
         handler: src/EventHandlers.ts
         events:
           - event: ExecutionStarted(uint256 indexed executionId, uint256 indexed agentId, address indexed userAddress, uint256 amountIn, address tokenIn, address tokenOut)
           - event: ExecutionCompleted(uint256 indexed executionId, uint256 indexed agentId, address indexed userAddress, uint256 amountIn, uint256 amountOut, int256 profitLoss, uint8 result)
           - event: RedelegationCreated(uint256 indexed parentAgentId, uint256 indexed childAgentId, address indexed userAddress, uint256 amount, uint256 duration)
+          - event: AutoFeedbackSubmitted(uint256 indexed executionId, uint256 indexed agentId, address indexed userAddress, uint8 score)
+          - event: AutoFeedbackFailed(uint256 indexed executionId, uint256 indexed agentId, string reason)
 
-sync:
-  initial_sync_method: hypersync
+      # ============================================
+      # REPUTATION REGISTRY (ERC-8004)
+      # ============================================
+      - name: ReputationRegistry
+        address:
+          - "0x986acF45e1475c6c386B78E9f57E642E052bAffd" # Deployed Jan 2, 2026
+        handler: src/EventHandlers.ts
+        events:
+          - event: NewFeedback(uint256 indexed agentId, address indexed clientAddress, uint8 score, bytes32 indexed tag1, bytes32 tag2, string fileuri, bytes32 filehash)
+          - event: FeedbackRevoked(uint256 indexed agentId, address indexed clientAddress, uint64 indexed feedbackIndex)
+          - event: ResponseAppended(uint256 indexed agentId, address indexed clientAddress, uint64 feedbackIndex, address indexed responder, string responseUri)
 
-database:
-  sqlite:
-    path: ./data/indexer.db
+      # ============================================
+      # VALIDATION REGISTRY (ERC-8004)
+      # ============================================
+      - name: ValidationRegistry
+        address:
+          - "0xA0674693Bee9754B0FcEfA8921dfCbf8Ddb7bc16" # Deployed Jan 2, 2026
+        handler: src/EventHandlers.ts
+        events:
+          - event: ValidationRequest(address indexed validatorAddress, uint256 indexed agentId, string requestUri, bytes32 indexed requestHash)
+          - event: ValidationResponse(address indexed validatorAddress, uint256 indexed agentId, bytes32 indexed requestHash, uint8 response, string responseUri, bytes32 tag)
+
+      # ============================================
+      # DELEGATION MANAGER (ERC-7710)
+      # MetaMask Delegation Framework contract for tracking delegation redemptions
+      # ============================================
+      - name: DelegationManager
+        address:
+          - "0xdb9B1e94B5b69Df7e401DDbedE43491141047dB3" # Official MetaMask Sepolia DelegationManager
+        handler: src/EventHandlers.ts
+        events:
+          # Emitted when a delegation is redeemed via redeemDelegations()
+          - event: RedeemedDelegation(bytes32 indexed delegationHash, address indexed redeemer)
+          # Emitted when a delegation is enabled/disabled
+          - event: SetDelegation(bytes32 indexed delegationHash, bool enabled)
+
+      # ============================================
+      # PERMISSION REGISTRY (ERC-7715 On-Chain Bridge)
+      # Records off-chain MetaMask Flask permissions on-chain
+      # ============================================
+      - name: PermissionRegistry
+        address:
+          - "0x113B560d7DCCa2d325DD3305195a02e096e35CC3" # Deployed Jan 2, 2026
+        handler: src/EventHandlers.ts
+        events:
+          - event: PermissionGranted(bytes32 indexed permissionId, address indexed user, address indexed agent, address token, uint256 amountPerPeriod, uint256 periodDuration, uint256 expiresAt, bytes32 permissionHash)
+          - event: PermissionRevoked(bytes32 indexed permissionId, address indexed user, address indexed agent, uint256 revokedAt)
+          - event: PermissionExpired(bytes32 indexed permissionId, address indexed user, address indexed agent)
+
+# Note: sync and database settings are now managed internally by Envio

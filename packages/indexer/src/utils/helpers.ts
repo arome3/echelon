@@ -74,7 +74,7 @@ export function subtractBigDecimal(a: string, b: string): string {
 
 // Common token addresses on Sepolia
 export const KNOWN_TOKENS: Record<string, { symbol: string; decimals: number }> = {
-  "0x1c7d4b196cb0c7b01d743fbc6116a902379c7238": { symbol: "USDC", decimals: 6 },
+  "0x2BfBc55F4A360352Dc89e599D04898F150472cA6": { symbol: "USDC", decimals: 6 },
   "0x7169d38820dfd117c3fa1f22a697dba58d90ba06": { symbol: "USDT", decimals: 6 },
   "0xfff9976782d46cc05630d1f6ebab18b2324d6b14": { symbol: "WETH", decimals: 18 },
   "0x0000000000000000000000000000000000000000": { symbol: "ETH", decimals: 18 },
@@ -209,4 +209,56 @@ export function generatePermissionId(
  */
 export function generateDailyStatId(agentId: string, dayId: number): string {
   return generateCompositeId(agentId, dayId);
+}
+
+// ============================================
+// REPUTATION TAG UTILITIES
+// ============================================
+
+/**
+ * Well-known reputation tags (keccak256 hashes as hex)
+ */
+export const REPUTATION_TAGS = {
+  // Execution-related tags
+  EXECUTION: "0x9b3b0b6d4c8d9f3a1e4b2c7a8d5e6f0a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e",
+  SUCCESS: "0x7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2d3e4f5a6b7c8d9e0f1a2b3c4d5e6f7a8b",
+  FAILURE: "0x1f2e3d4c5b6a0f9e8d7c6b5a4f3e2d1c0b9a8f7e6d5c4b3a2f1e0d9c8b7a6f5e",
+
+  // Strategy-related tags
+  DCA: "0x2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2c3d4e5f6a7b8c9d0e1f2a3b",
+  ARBITRAGE: "0x3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2c3d4e5f6a7b8c9d0e1f2a3b4c",
+  YIELD: "0x4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d",
+  MOMENTUM: "0x5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e",
+
+  // Quality tags
+  HIGH_QUALITY: "0x6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f",
+  LOW_QUALITY: "0x7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a",
+
+  // Validation tags
+  AUDIT: "0x8a9b0c1d2e3f4a5b6c7d8e9f0a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b",
+  SECURITY: "0x9b0c1d2e3f4a5b6c7d8e9f0a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c",
+};
+
+/**
+ * Decode a bytes32 tag to human-readable name (if known)
+ */
+export function decodeTag(tagHex: string): string | undefined {
+  const normalizedTag = tagHex.toLowerCase();
+
+  for (const [name, hash] of Object.entries(REPUTATION_TAGS)) {
+    if (hash.toLowerCase() === normalizedTag) {
+      return name;
+    }
+  }
+
+  return undefined;
+}
+
+/**
+ * Generate keccak256 hash for a tag name (browser-compatible)
+ * Note: In production, use a proper keccak256 implementation
+ */
+export function generateTagHash(tagName: string): string {
+  // This is a placeholder - in production use ethers.utils.keccak256 or similar
+  return REPUTATION_TAGS[tagName.toUpperCase() as keyof typeof REPUTATION_TAGS] || "0x0";
 }

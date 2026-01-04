@@ -15,6 +15,8 @@ type Agent @entity {
   riskLevel: Int! # 1-10 scale
   registeredAt: BigInt! # Unix timestamp
   isActive: Boolean! @index # Accepting delegations
+  isVerified: Boolean! @index # Verified by Echelon (set by contract owner)
+  isOrchestrator: Boolean! @index # Orchestrator badge (manages other agents, no direct trades)
   metadataUri: String! # IPFS/HTTPS metadata
 
   # Performance Metrics (Computed)
@@ -45,6 +47,13 @@ type Agent @entity {
   redelegationsAsParent: [Redelegation!]! @derivedFrom(field: "parentAgent")
   redelegationsAsChild: [Redelegation!]! @derivedFrom(field: "childAgent")
   dailyStats: [AgentDailyStat!]! @derivedFrom(field: "agent")
+  feedbacks: [Feedback!]! @derivedFrom(field: "agent")
+  validationRequests: [ValidationRequest!]! @derivedFrom(field: "agent")
+  reputationSummary: AgentReputationSummary # 1:1 relationship, set manually
+
+  # ERC-7710 Delegation Relationships
+  delegationsCreated: [ERC7710Delegation!]! @derivedFrom(field: "delegatorAgent")
+  delegationsReceived: [ERC7710Delegation!]! @derivedFrom(field: "delegateAgent")
 }
 
 type Execution @entity {
@@ -106,12 +115,14 @@ type User @entity {
   # Relationships
   permissions: [Permission!]! @derivedFrom(field: "user")
   executions: [Execution!]! @derivedFrom(field: "user")
+  delegationsInvolved: [ERC7710Delegation!]! @derivedFrom(field: "originalUser")
 }
 
 type Permission @entity {
-  id: ID! # Composite: user-agent-timestamp
+  id: ID! # Permission ID from PermissionRegistry contract (bytes32 as hex)
   user: User! # Granting user
-  agent: Agent! # Receiving agent
+  agent: Agent # Receiving agent (optional - may not be registered yet)
+  agentAddress: String! @index # Agent wallet address (always populated)
 
   # Permission Parameters
   permissionType: String! # erc20-token-periodic, etc.
@@ -131,6 +142,9 @@ type Permission @entity {
   amountUsed: BigDecimal! # Amount already used (wei)
   amountRemaining: BigDecimal! # Amount remaining (wei)
   periodsElapsed: BigInt! # Number of periods elapsed
+
+  # On-chain tracking
+  permissionHash: String # Hash of the ERC-7715 permission data
 
   # Transaction Info
   grantTxHash: String! # Grant transaction hash
@@ -156,6 +170,101 @@ type Redelegation @entity {
 
   # Transaction Info
   txHash: String!
+
+  # ERC-7710 Delegation Reference (if applicable)
+  erc7710Delegation: ERC7710Delegation # Link to off-chain delegation
+}
+
+# ============================================
+# ERC-7710 DELEGATION ENTITIES
+# ============================================
+
+"""
+ERC-7710 Signed Delegation
+Represents an off-chain signed delegation that grants capabilities
+from a delegator (Smart Account) to a delegate (agent).
+Used in A2A (Agent-to-Agent) redelegation flows.
+"""
+type ERC7710Delegation @entity {
+  id: ID! # Delegation hash
+  delegator: String! @index # Smart Account that signed the delegation
+  delegate: String! @index # Address that can redeem (specialist agent wallet)
+
+  # Related Entities
+  delegatorAgent: Agent # Fund Manager agent (if known)
+  delegateAgent: Agent # Specialist agent (if known)
+  originalUser: User # User who originally granted permission
+
+  # Authority Chain
+  authority: String! # Authority type (root or parent delegation hash)
+  isRootAuthority: Boolean! @index # True if this is a root delegation
+
+  # Signature
+  signature: String! # EIP-712 signature
+
+  # Caveats (Restrictions)
+  caveatsCount: Int! # Number of caveats
+  caveats: [DelegationCaveat!]! @derivedFrom(field: "delegation")
+
+  # Redemption Status
+  isRedeemed: Boolean! @index # Whether delegation has been redeemed
+  redemptionTxHash: String # Transaction hash of redemption
+  redemptionBlockNumber: BigInt # Block number of redemption
+
+  # Timing
+  createdAt: BigInt! # Unix timestamp when created
+  expiresAt: BigInt # Unix timestamp when expires (from timestamp caveat)
+  redeemedAt: BigInt # Unix timestamp when redeemed
+
+  # Amount (from ERC20TransferAmount caveat if present)
+  amount: BigDecimal # Amount limit (wei)
+  amountUsed: BigDecimal # Amount used (wei)
+
+  # Metadata
+  salt: String! # Unique salt for this delegation
+}
+
+"""
+DelegationCaveat represents a restriction on an ERC-7710 delegation.
+Caveats are enforced on-chain by enforcer contracts.
+"""
+type DelegationCaveat @entity {
+  id: ID! # delegation-index
+  delegation: ERC7710Delegation!
+  index: Int! # Position in caveats array
+
+  # Enforcer
+  enforcer: String! # Enforcer contract address
+  enforcerType: String # Human-readable type (timestamp, limitedCalls, etc.)
+
+  # Terms
+  terms: String! # ABI-encoded terms (hex)
+  termsDecoded: String # Human-readable decoded terms (JSON)
+}
+
+"""
+DelegationRedemptionEvent tracks when a delegation is redeemed on-chain.
+Indexed from DelegationManager contract events.
+"""
+type DelegationRedemptionEvent @entity {
+  id: ID! # txHash-logIndex
+  delegation: ERC7710Delegation! # The delegation being redeemed
+
+  # Execution Details
+  redeemer: String! @index # Address that submitted the redemption
+  target: String! # Target contract of the execution
+  value: BigDecimal! # ETH value sent (wei)
+  callData: String! # Execution calldata (hex)
+
+  # Result
+  success: Boolean! # Whether redemption succeeded
+  returnData: String # Return data from execution
+
+  # Transaction Info
+  txHash: String!
+  blockNumber: BigInt!
+  timestamp: BigInt!
+  gasUsed: BigInt
 }
 
 # ============================================
@@ -216,4 +325,121 @@ type LeaderboardEntry @entity {
   winRate: BigDecimal!
   totalVolume: BigDecimal!
   profitLoss: BigDecimal!
+}
+
+# ============================================
+# ERC-8004 REPUTATION ENTITIES
+# ============================================
+
+type Feedback @entity {
+  id: ID! # Composite: agentId-clientAddress-index
+  agent: Agent! # The agent receiving feedback
+  clientAddress: String! @index # Address of client giving feedback
+
+  # Feedback Details
+  score: Int! # 0-100 score
+  tag1: String! # Primary categorization tag (bytes32 as hex)
+  tag2: String! # Secondary tag (bytes32 as hex)
+  fileUri: String # URI to detailed feedback file
+  fileHash: String # Hash of feedback file
+
+  # Status
+  isRevoked: Boolean! @index # Whether feedback was revoked
+
+  # Timestamps
+  createdAt: BigInt! # When feedback was submitted
+  revokedAt: BigInt # When feedback was revoked (if applicable)
+
+  # Transaction Info
+  txHash: String!
+  blockNumber: BigInt!
+
+  # Relationships
+  responses: [FeedbackResponse!]! @derivedFrom(field: "feedback")
+}
+
+type FeedbackResponse @entity {
+  id: ID! # Composite: feedbackId-responseIndex
+  feedback: Feedback! # The feedback being responded to
+  responder: String! @index # Address of responder
+
+  # Response Details
+  responseUri: String! # URI to response content
+  responseHash: String! # Hash of response content
+
+  # Timestamps
+  createdAt: BigInt!
+
+  # Transaction Info
+  txHash: String!
+  blockNumber: BigInt!
+}
+
+# ============================================
+# ERC-8004 VALIDATION ENTITIES
+# ============================================
+
+type ValidationRequest @entity {
+  id: ID! # requestHash (bytes32 as hex)
+  agent: Agent! # Agent being validated
+  validator: String! @index # Validator address
+  requester: String! @index # Who created the request
+
+  # Request Details
+  requestUri: String! # URI to request details
+
+  # Response Details (populated when validator responds)
+  hasResponse: Boolean! @index # Whether validator has responded
+  response: Int # 0-100 validation score (null if pending)
+  responseUri: String # URI to response content
+  responseHash: String # Hash of response
+  tag: String # Categorization tag
+
+  # Timestamps
+  requestedAt: BigInt! # When request was created
+  respondedAt: BigInt # When response was submitted
+
+  # Transaction Info
+  requestTxHash: String!
+  responseTxHash: String
+  blockNumber: BigInt!
+}
+
+type Validator @entity {
+  id: ID! # Validator address
+  totalRequests: BigInt! # Total validation requests received
+  completedRequests: BigInt! # Total validations completed
+  avgResponseScore: BigDecimal! # Average response score given
+
+  # Timestamps
+  firstRequestAt: BigInt # First request timestamp
+  lastActivityAt: BigInt # Last activity timestamp
+
+  # Relationships
+  validations: [ValidationRequest!]! @derivedFrom(field: "validator")
+}
+
+# ============================================
+# AGENT REPUTATION SUMMARY
+# ============================================
+
+type AgentReputationSummary @entity {
+  id: ID! # agentId
+  agent: Agent!
+
+  # Feedback Metrics
+  totalFeedbackCount: BigInt!
+  activeFeedbackCount: BigInt! # Excluding revoked
+  avgFeedbackScore: BigDecimal!
+
+  # Validation Metrics
+  totalValidationRequests: BigInt!
+  completedValidations: BigInt!
+  avgValidationScore: BigDecimal!
+
+  # Combined Score (0-100)
+  combinedReputationScore: Int!
+
+  # Timestamps
+  lastUpdated: BigInt!
 }

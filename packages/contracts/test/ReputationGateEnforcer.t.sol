@@ -18,7 +18,7 @@ contract ReputationGateEnforcerTest is Test {
     address public redeemer = address(0x400);
 
     // Test token addresses
-    address public usdc = address(0x1c7D4B196Cb0C7B01d743Fbc6116a902379C7238);
+    address public usdc = address(0x2BfBc55F4A360352Dc89e599D04898F150472cA6);
 
     // Default terms for testing
     uint256 public constant BASE_AMOUNT = 1e6;    // 1 USDC

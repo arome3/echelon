@@ -1,0 +1,614 @@
+# ============================================
+# ECHELON INDEXER - EXAMPLE GRAPHQL QUERIES
+# ============================================
+# Use these queries against the Envio GraphQL endpoint
+
+# ============================================
+# AGENT LEADERBOARD QUERIES
+# ============================================
+
+# Get top agents by reputation score
+query GetLeaderboard($limit: Int!, $strategyType: String) {
+  agents(
+    first: $limit
+    orderBy: reputationScore
+    orderDirection: desc
+    where: { isActive: true, strategyType_contains: $strategyType }
+  ) {
+    id
+    name
+    walletAddress
+    ownerAddress
+    strategyType
+    riskLevel
+    reputationScore
+    winRate
+    totalExecutions
+    successfulExecutions
+    failedExecutions
+    totalVolumeIn
+    totalProfitLoss
+    avgProfitPerTrade
+    registeredAt
+    lastExecutionAt
+  }
+}
+
+# Get active agents by strategy type
+query GetAgentsByStrategy($strategyType: String!) {
+  agents(
+    first: 50
+    orderBy: reputationScore
+    orderDirection: desc
+    where: { isActive: true, strategyType: $strategyType }
+  ) {
+    id
+    name
+    walletAddress
+    reputationScore
+    winRate
+    totalExecutions
+    totalProfitLoss
+  }
+}
+
+# ============================================
+# SINGLE AGENT QUERIES
+# ============================================
+
+# Get detailed agent information
+query GetAgentDetails($agentId: ID!) {
+  agent(id: $agentId) {
+    id
+    name
+    walletAddress
+    ownerAddress
+    strategyType
+    riskLevel
+    registeredAt
+    isActive
+    metadataUri
+
+    # Performance metrics
+    reputationScore
+    winRate
+    totalExecutions
+    successfulExecutions
+    failedExecutions
+    pendingExecutions
+    totalVolumeIn
+    totalVolumeOut
+    totalProfitLoss
+    avgProfitPerTrade
+    maxDrawdown
+    sharpeRatio
+
+    lastExecutionAt
+    updatedAt
+
+    # Recent executions
+    executions(first: 20, orderBy: startedAt, orderDirection: desc) {
+      id
+      amountIn
+      amountOut
+      tokenIn
+      tokenOut
+      profitLoss
+      profitLossPercent
+      result
+      startedAt
+      completedAt
+      duration
+      startTxHash
+    }
+
+    # Redelegations (A2A)
+    redelegationsAsParent(first: 10, where: { isActive: true }) {
+      childAgent {
+        id
+        name
+        reputationScore
+      }
+      amount
+      duration
+      createdAt
+      expiresAt
+    }
+  }
+}
+
+# Get agent's reputation summary
+query GetAgentReputation($agentId: ID!) {
+  agent(id: $agentId) {
+    id
+    name
+    reputationScore
+
+    # On-chain execution reputation
+    winRate
+    avgProfitPerTrade
+    totalExecutions
+
+    # ERC-8004 Reputation summary
+    reputationSummary {
+      totalFeedbackCount
+      activeFeedbackCount
+      avgFeedbackScore
+      totalValidationRequests
+      completedValidations
+      avgValidationScore
+      combinedReputationScore
+      lastUpdated
+    }
+
+    # Recent feedbacks
+    feedbacks(first: 10, orderBy: createdAt, orderDirection: desc, where: { isRevoked: false }) {
+      id
+      clientAddress
+      score
+      tag1
+      tag2
+      fileUri
+      createdAt
+    }
+
+    # Validation requests
+    validationRequests(first: 10, orderBy: requestedAt, orderDirection: desc) {
+      id
+      validator
+      hasResponse
+      response
+      tag
+      requestedAt
+      respondedAt
+    }
+  }
+}
+
+# ============================================
+# USER QUERIES
+# ============================================
+
+# Get user's permissions and activity
+query GetUserDashboard($userAddress: ID!) {
+  user(id: $userAddress) {
+    id
+    totalDelegated
+    currentDelegated
+    activePermissions
+    totalPermissionsGranted
+    totalProfitFromAgents
+    firstDelegationAt
+    lastActivityAt
+
+    bestAgentUsed {
+      id
+      name
+      reputationScore
+    }
+
+    # Active permissions
+    permissions(first: 20, where: { isActive: true }) {
+      id
+      agent {
+        id
+        name
+        walletAddress
+        reputationScore
+      }
+      permissionType
+      tokenAddress
+      tokenSymbol
+      amountPerPeriod
+      periodDuration
+      totalAmount
+      amountUsed
+      amountRemaining
+      grantedAt
+      expiresAt
+    }
+
+    # Recent executions
+    executions(first: 20, orderBy: startedAt, orderDirection: desc) {
+      id
+      agent {
+        id
+        name
+      }
+      amountIn
+      amountOut
+      profitLoss
+      result
+      startedAt
+      completedAt
+    }
+  }
+}
+
+# ============================================
+# EXECUTION QUERIES
+# ============================================
+
+# Get recent executions
+query GetRecentExecutions($limit: Int!, $result: ExecutionResult) {
+  executions(
+    first: $limit
+    orderBy: startedAt
+    orderDirection: desc
+    where: { result: $result }
+  ) {
+    id
+    agent {
+      id
+      name
+      walletAddress
+    }
+    user {
+      id
+    }
+    amountIn
+    amountOut
+    tokenIn
+    tokenOut
+    profitLoss
+    profitLossPercent
+    result
+    startedAt
+    completedAt
+    duration
+    startTxHash
+    completeTxHash
+  }
+}
+
+# Get pending executions
+query GetPendingExecutions {
+  executions(
+    first: 100
+    orderBy: startedAt
+    orderDirection: desc
+    where: { result: PENDING }
+  ) {
+    id
+    agent {
+      id
+      name
+    }
+    user {
+      id
+    }
+    amountIn
+    tokenIn
+    tokenOut
+    startedAt
+    startTxHash
+  }
+}
+
+# ============================================
+# FEEDBACK & REPUTATION QUERIES
+# ============================================
+
+# Get all feedback for an agent
+query GetAgentFeedback($agentId: ID!, $includeRevoked: Boolean) {
+  feedbacks(
+    first: 100
+    orderBy: createdAt
+    orderDirection: desc
+    where: {
+      agent: $agentId,
+      isRevoked: $includeRevoked
+    }
+  ) {
+    id
+    clientAddress
+    score
+    tag1
+    tag2
+    fileUri
+    fileHash
+    isRevoked
+    createdAt
+    revokedAt
+    txHash
+
+    # Responses to this feedback
+    responses(first: 10) {
+      id
+      responder
+      responseUri
+      responseHash
+      createdAt
+    }
+  }
+}
+
+# Get feedback by tag
+query GetFeedbackByTag($tag1: String!, $agentId: ID) {
+  feedbacks(
+    first: 100
+    orderBy: createdAt
+    orderDirection: desc
+    where: {
+      tag1: $tag1,
+      agent: $agentId,
+      isRevoked: false
+    }
+  ) {
+    id
+    agent {
+      id
+      name
+    }
+    clientAddress
+    score
+    tag1
+    tag2
+    createdAt
+  }
+}
+
+# ============================================
+# VALIDATION QUERIES
+# ============================================
+
+# Get validation requests for an agent
+query GetAgentValidations($agentId: ID!) {
+  validationRequests(
+    first: 50
+    orderBy: requestedAt
+    orderDirection: desc
+    where: { agent: $agentId }
+  ) {
+    id
+    validator
+    requester
+    requestUri
+    hasResponse
+    response
+    responseUri
+    tag
+    requestedAt
+    respondedAt
+    requestTxHash
+    responseTxHash
+  }
+}
+
+# Get pending validations for a validator
+query GetValidatorPending($validatorAddress: String!) {
+  validationRequests(
+    first: 100
+    orderBy: requestedAt
+    orderDirection: asc
+    where: {
+      validator: $validatorAddress,
+      hasResponse: false
+    }
+  ) {
+    id
+    agent {
+      id
+      name
+      walletAddress
+    }
+    requester
+    requestUri
+    requestedAt
+  }
+}
+
+# Get validator statistics
+query GetValidatorStats($validatorAddress: ID!) {
+  validator(id: $validatorAddress) {
+    id
+    totalRequests
+    completedRequests
+    avgResponseScore
+    firstRequestAt
+    lastActivityAt
+
+    validations(first: 20, orderBy: requestedAt, orderDirection: desc) {
+      id
+      agent {
+        id
+        name
+      }
+      response
+      tag
+      respondedAt
+    }
+  }
+}
+
+# ============================================
+# A2A (AGENT-TO-AGENT) QUERIES
+# ============================================
+
+# Get delegation tree for an agent
+query GetDelegationTree($agentId: ID!) {
+  agent(id: $agentId) {
+    id
+    name
+    reputationScore
+
+    # Agents this agent delegates TO
+    redelegationsAsParent(where: { isActive: true }) {
+      id
+      childAgent {
+        id
+        name
+        reputationScore
+        strategyType
+
+        # Second level redelegations
+        redelegationsAsParent(where: { isActive: true }) {
+          childAgent {
+            id
+            name
+            reputationScore
+          }
+          amount
+        }
+      }
+      amount
+      duration
+      createdAt
+      expiresAt
+    }
+
+    # Agents that delegate TO this agent
+    redelegationsAsChild(where: { isActive: true }) {
+      id
+      parentAgent {
+        id
+        name
+        reputationScore
+      }
+      amount
+      duration
+      createdAt
+    }
+  }
+}
+
+# Get active redelegations
+query GetActiveRedelegations {
+  redelegations(
+    first: 100
+    orderBy: createdAt
+    orderDirection: desc
+    where: { isActive: true }
+  ) {
+    id
+    parentAgent {
+      id
+      name
+      reputationScore
+    }
+    childAgent {
+      id
+      name
+      reputationScore
+      strategyType
+    }
+    user {
+      id
+    }
+    amount
+    duration
+    createdAt
+    expiresAt
+    txHash
+  }
+}
+
+# ============================================
+# ANALYTICS QUERIES
+# ============================================
+
+# Get global platform statistics
+query GetGlobalStats {
+  globalStats(id: "global") {
+    id
+    totalAgents
+    activeAgents
+    totalUsers
+    totalExecutions
+    totalPermissions
+    activePermissions
+    totalRedelegations
+    totalVolumeProcessed
+    totalProfitGenerated
+    lastUpdated
+  }
+}
+
+# Get agent daily statistics
+query GetAgentDailyStats($agentId: String!, $days: Int!) {
+  agentDailyStats(
+    first: $days
+    orderBy: timestamp
+    orderDirection: desc
+    where: { agent: $agentId }
+  ) {
+    id
+    date
+    timestamp
+    executionCount
+    successCount
+    failureCount
+    volumeIn
+    volumeOut
+    profitLoss
+    winRate
+    dailyRank
+  }
+}
+
+# Get leaderboard snapshot
+query GetLeaderboardSnapshot($timestamp: BigInt!) {
+  leaderboardSnapshot(id: $timestamp) {
+    id
+    timestamp
+    rankings(first: 50, orderBy: rank, orderDirection: asc) {
+      rank
+      agent {
+        id
+        name
+      }
+      reputationScore
+      winRate
+      totalVolume
+      profitLoss
+    }
+  }
+}
+
+# ============================================
+# SEARCH QUERIES
+# ============================================
+
+# Search agents by name
+query SearchAgents($searchTerm: String!) {
+  agents(
+    first: 20
+    where: {
+      name_contains_nocase: $searchTerm,
+      isActive: true
+    }
+    orderBy: reputationScore
+    orderDirection: desc
+  ) {
+    id
+    name
+    walletAddress
+    strategyType
+    reputationScore
+    totalExecutions
+  }
+}
+
+# Get best agent for specific criteria
+query GetBestAgent($strategyType: String!, $maxRisk: Int!, $minExecutions: BigInt!) {
+  agents(
+    first: 1
+    orderBy: reputationScore
+    orderDirection: desc
+    where: {
+      isActive: true,
+      strategyType: $strategyType,
+      riskLevel_lte: $maxRisk,
+      totalExecutions_gte: $minExecutions
+    }
+  ) {
+    id
+    walletAddress
+    name
+    reputationScore
+    winRate
+    riskLevel
+    totalExecutions
+    totalProfitLoss
+  }
+}

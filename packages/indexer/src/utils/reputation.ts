@@ -1,6 +1,14 @@
 /**
  * Reputation Calculation Utilities
  * Computes agent reputation scores based on performance metrics
+ *
+ * Score Formula (per docs/07-reputation-system.md):
+ * - Win Rate: 40% (0-40 points)
+ * - Volume: 25% (0-25 points)
+ * - Profitability: 25% (0-25 points)
+ * - Consistency: 10% (0-10 points)
+ *
+ * Total: 0-100 points
  */
 
 // ============================================
@@ -15,27 +23,45 @@ export interface ReputationInput {
   avgProfitPerTrade: number;
 }
 
+export interface ScoreComponents {
+  winRateScore: number;
+  volumeScore: number;
+  profitScore: number;
+  consistencyScore: number;
+  total: number;
+  isNeutral: boolean;
+}
+
 // ============================================
 // CONSTANTS
 // ============================================
 
-// Weight factors for reputation calculation
-const WEIGHTS = {
-  winRate: 0.35, // 35% - Consistency matters most
-  profitability: 0.25, // 25% - Actual returns
-  volume: 0.15, // 15% - Proven at scale
-  experience: 0.15, // 15% - Track record length
-  efficiency: 0.10, // 10% - Profit per trade
-};
+/**
+ * Minimum executions required for reliable score calculation.
+ * Agents with fewer executions receive neutral score of 50.
+ */
+export const MIN_EXECUTIONS_FOR_SCORE = 5;
 
-// Thresholds for volume normalization (in wei)
-const VOLUME_THRESHOLDS = {
-  min: 1e15, // 0.001 ETH equivalent
-  max: 1e21, // 1000 ETH equivalent
-};
+/**
+ * Score component maximums (per spec)
+ */
+export const SCORE_WEIGHTS = {
+  WIN_RATE: 40,
+  VOLUME: 25,
+  PROFITABILITY: 25,
+  CONSISTENCY: 10,
+} as const;
 
-// Minimum executions for full experience score
-const MIN_EXECUTIONS_FOR_MAX_EXPERIENCE = 100;
+/**
+ * Score tier thresholds and labels
+ */
+export const SCORE_TIERS = {
+  EXCELLENT: { min: 80, label: "Excellent", recommendation: "Safe for larger delegations" },
+  GOOD: { min: 60, label: "Good", recommendation: "Standard delegations" },
+  FAIR: { min: 40, label: "Fair", recommendation: "Small trial delegations" },
+  POOR: { min: 20, label: "Poor", recommendation: "Use caution" },
+  CRITICAL: { min: 0, label: "Critical", recommendation: "Not recommended" },
+} as const;
 
 // ============================================
 // CALCULATION FUNCTIONS
@@ -43,38 +69,81 @@ const MIN_EXECUTIONS_FOR_MAX_EXPERIENCE = 100;
 
 /**
  * Calculate overall reputation score (0-100)
+ *
+ * Formula:
+ * - WinRateScore = winRate × 40
+ * - VolumeScore = min(25, log₁₀(normalizedVolume + 1) × 8)
+ * - ProfitScore = profit > 0 ? min(25, profitRatio × 250) : max(0, 12.5 - lossRatio × 125)
+ * - ConsistencyScore = min(10, log₁₀(executionCount + 1) × 4)
  */
 export function calculateReputationScore(input: ReputationInput): number {
-  const {
-    winRate,
-    totalVolume,
-    profitLoss,
-    executionCount,
-    avgProfitPerTrade,
-  } = input;
+  const components = calculateScoreComponents(input);
+  return components.total;
+}
 
-  // If no executions, return initial score
-  if (executionCount === 0) {
-    return 50;
+/**
+ * Calculate individual score components
+ * Used for detailed score breakdown display
+ */
+export function calculateScoreComponents(input: ReputationInput): ScoreComponents {
+  const { winRate, totalVolume, profitLoss, executionCount } = input;
+
+  // Minimum executions check - return neutral score for new agents
+  if (executionCount < MIN_EXECUTIONS_FOR_SCORE) {
+    return {
+      winRateScore: 0,
+      volumeScore: 0,
+      profitScore: 0,
+      consistencyScore: 0,
+      total: 50,
+      isNeutral: true,
+    };
   }
 
-  // Calculate component scores (0-100 each)
-  const winRateScore = calculateWinRateScore(winRate);
-  const profitabilityScore = calculateProfitabilityScore(profitLoss, totalVolume);
-  const volumeScore = calculateVolumeScore(totalVolume);
-  const experienceScore = calculateExperienceScore(executionCount);
-  const efficiencyScore = calculateEfficiencyScore(avgProfitPerTrade);
+  // 1. Win Rate Component (0-40 points)
+  // Linear: winRate × 40
+  const winRateScore = Math.min(SCORE_WEIGHTS.WIN_RATE, winRate * SCORE_WEIGHTS.WIN_RATE);
 
-  // Calculate weighted average
-  const score =
-    winRateScore * WEIGHTS.winRate +
-    profitabilityScore * WEIGHTS.profitability +
-    volumeScore * WEIGHTS.volume +
-    experienceScore * WEIGHTS.experience +
-    efficiencyScore * WEIGHTS.efficiency;
+  // 2. Volume Component (0-25 points)
+  // Logarithmic: min(25, log₁₀(normalizedVolume + 1) × 8)
+  const normalizedVolume = totalVolume / 1e18; // Convert from wei to ETH
+  const volumeScore = Math.min(
+    SCORE_WEIGHTS.VOLUME,
+    Math.log10(normalizedVolume + 1) * 8
+  );
 
-  // Clamp to 0-100 and round
-  return Math.round(Math.max(0, Math.min(100, score)));
+  // 3. Profitability Component (0-25 points)
+  // Positive profit: min(25, profitRatio × 250) - 10% ROI = 25 points
+  // Negative profit: max(0, 12.5 - lossRatio × 125) - starts at 12.5 and decreases
+  let profitScore: number;
+  if (profitLoss > 0) {
+    const profitRatio = totalVolume > 0 ? profitLoss / totalVolume : 0;
+    profitScore = Math.min(SCORE_WEIGHTS.PROFITABILITY, profitRatio * 250);
+  } else {
+    const lossRatio = totalVolume > 0 ? Math.abs(profitLoss) / totalVolume : 0;
+    profitScore = Math.max(0, 12.5 - lossRatio * 125);
+  }
+
+  // 4. Consistency Component (0-10 points)
+  // Logarithmic: min(10, log₁₀(executionCount + 1) × 4)
+  const consistencyScore = Math.min(
+    SCORE_WEIGHTS.CONSISTENCY,
+    Math.log10(executionCount + 1) * 4
+  );
+
+  // Calculate total and clamp to 0-100
+  const total = Math.round(
+    Math.max(0, Math.min(100, winRateScore + volumeScore + profitScore + consistencyScore))
+  );
+
+  return {
+    winRateScore,
+    volumeScore,
+    profitScore,
+    consistencyScore,
+    total,
+    isNeutral: false,
+  };
 }
 
 /**
@@ -86,78 +155,26 @@ export function calculateWinRate(successCount: number, totalCount: number): numb
 }
 
 /**
- * Calculate win rate score component (0-100)
+ * Get score tier information
  */
-function calculateWinRateScore(winRate: number): number {
-  // Linear scaling from 0 to 100
-  // 0% win rate = 0 score, 100% win rate = 100 score
-  // But we also consider that >50% is good, >70% is excellent
-  if (winRate < 0.3) {
-    return winRate * 100; // Below 30%, linear scaling
-  } else if (winRate < 0.5) {
-    return 30 + (winRate - 0.3) * 100; // 30-50%, faster scaling
-  } else if (winRate < 0.7) {
-    return 50 + (winRate - 0.5) * 150; // 50-70%, even faster
-  } else {
-    return 80 + (winRate - 0.7) * 66.67; // 70-100%, capped scaling
+export function getScoreTier(score: number): {
+  tier: "excellent" | "good" | "fair" | "poor" | "critical";
+  label: string;
+  recommendation: string;
+} {
+  if (score >= SCORE_TIERS.EXCELLENT.min) {
+    return { tier: "excellent", ...SCORE_TIERS.EXCELLENT };
   }
-}
-
-/**
- * Calculate profitability score component (0-100)
- */
-function calculateProfitabilityScore(profitLoss: number, totalVolume: number): number {
-  if (totalVolume === 0) return 50; // Neutral score if no volume
-
-  // Calculate ROI percentage
-  const roi = (profitLoss / totalVolume) * 100;
-
-  // Map ROI to score
-  // -10% or worse = 0
-  // 0% = 50
-  // +10% or better = 100
-  const score = 50 + roi * 5;
-
-  return Math.max(0, Math.min(100, score));
-}
-
-/**
- * Calculate volume score component (0-100)
- */
-function calculateVolumeScore(totalVolume: number): number {
-  if (totalVolume <= VOLUME_THRESHOLDS.min) return 0;
-  if (totalVolume >= VOLUME_THRESHOLDS.max) return 100;
-
-  // Logarithmic scaling between thresholds
-  const logMin = Math.log10(VOLUME_THRESHOLDS.min);
-  const logMax = Math.log10(VOLUME_THRESHOLDS.max);
-  const logVolume = Math.log10(totalVolume);
-
-  return ((logVolume - logMin) / (logMax - logMin)) * 100;
-}
-
-/**
- * Calculate experience score component (0-100)
- */
-function calculateExperienceScore(executionCount: number): number {
-  if (executionCount >= MIN_EXECUTIONS_FOR_MAX_EXPERIENCE) return 100;
-
-  // Square root scaling for diminishing returns
-  return Math.sqrt(executionCount / MIN_EXECUTIONS_FOR_MAX_EXPERIENCE) * 100;
-}
-
-/**
- * Calculate efficiency score component (0-100)
- */
-function calculateEfficiencyScore(avgProfitPerTrade: number): number {
-  // Normalize average profit
-  // Assuming average trade is around 0.1 ETH (1e17 wei)
-  const normalizedProfit = avgProfitPerTrade / 1e17;
-
-  // Map to score: -5% loss = 0, 0% = 50, +5% profit = 100
-  const score = 50 + normalizedProfit * 1000;
-
-  return Math.max(0, Math.min(100, score));
+  if (score >= SCORE_TIERS.GOOD.min) {
+    return { tier: "good", ...SCORE_TIERS.GOOD };
+  }
+  if (score >= SCORE_TIERS.FAIR.min) {
+    return { tier: "fair", ...SCORE_TIERS.FAIR };
+  }
+  if (score >= SCORE_TIERS.POOR.min) {
+    return { tier: "poor", ...SCORE_TIERS.POOR };
+  }
+  return { tier: "critical", ...SCORE_TIERS.CRITICAL };
 }
 
 // ============================================
@@ -212,4 +229,98 @@ export function calculateMaxDrawdown(values: number[]): number {
   }
 
   return maxDrawdown;
+}
+
+/**
+ * Calculate running max drawdown for an agent (simplified version)
+ *
+ * This calculates maxDrawdown based on available aggregate data:
+ * - If agent has positive P&L but had losses, calculate drawdown from losses
+ * - Tracks the largest loss relative to cumulative gains at that point
+ *
+ * @param currentMaxDrawdown - Previous max drawdown
+ * @param cumulativeProfitBeforeTrade - Total P&L before this trade
+ * @param tradeProfitLoss - P&L of current trade
+ * @param totalVolumeBeforeTrade - Total volume before this trade
+ * @returns Updated max drawdown (0-1 range, e.g., 0.15 = 15% drawdown)
+ */
+export function calculateRunningMaxDrawdown(
+  currentMaxDrawdown: number,
+  cumulativeProfitBeforeTrade: number,
+  tradeProfitLoss: number,
+  totalVolumeBeforeTrade: number
+): number {
+  // If this trade was a loss, calculate potential drawdown
+  if (tradeProfitLoss < 0) {
+    // Calculate peak equity before this trade (treating volume as capital base)
+    // Peak = max(0, cumulative profit) + volume used
+    const peakEquity = Math.max(0, cumulativeProfitBeforeTrade) + totalVolumeBeforeTrade;
+
+    if (peakEquity > 0) {
+      // Current equity after the loss
+      const currentEquity = peakEquity + tradeProfitLoss;
+
+      // Drawdown from peak
+      const drawdown = (peakEquity - currentEquity) / peakEquity;
+
+      // Return the larger of current max or new drawdown
+      return Math.max(currentMaxDrawdown, Math.min(1, drawdown));
+    }
+  }
+
+  return currentMaxDrawdown;
+}
+
+/**
+ * Calculate simplified Sharpe ratio based on available metrics
+ *
+ * True Sharpe = (mean return - risk free rate) / std deviation of returns
+ *
+ * Simplified version uses:
+ * - Mean return = avgProfitPerTrade / avgTradeSize
+ * - Approximated volatility from win rate variance
+ *
+ * @param avgProfitPerTrade - Average profit per trade
+ * @param totalVolume - Total volume traded
+ * @param executionCount - Number of executions
+ * @param winRate - Success rate (0-1)
+ * @param riskFreeRate - Annual risk-free rate (default 0.02 = 2%)
+ * @returns Sharpe ratio (typically -3 to +3 range)
+ */
+export function calculateSimplifiedSharpe(
+  avgProfitPerTrade: number,
+  totalVolume: number,
+  executionCount: number,
+  winRate: number,
+  riskFreeRate: number = 0.02
+): number {
+  if (executionCount < 5 || totalVolume === 0) {
+    return 0; // Not enough data for meaningful calculation
+  }
+
+  // Calculate average trade size
+  const avgTradeSize = totalVolume / executionCount;
+
+  if (avgTradeSize === 0) return 0;
+
+  // Mean return per trade (as percentage)
+  const meanReturn = avgProfitPerTrade / avgTradeSize;
+
+  // Approximate standard deviation using win rate
+  // Higher variance when win rate is around 50%, lower at extremes
+  // This is a simplification - true std dev needs actual return distribution
+  const winRateVariance = winRate * (1 - winRate); // Bernoulli variance
+  const approximatedStdDev = Math.sqrt(winRateVariance) * Math.abs(meanReturn) + 0.01;
+
+  // Annualize (assuming ~250 trading days)
+  const annualizedReturn = meanReturn * 250;
+  const annualizedStdDev = approximatedStdDev * Math.sqrt(250);
+
+  if (annualizedStdDev === 0) return 0;
+
+  // Calculate Sharpe ratio
+  const sharpe = (annualizedReturn - riskFreeRate) / annualizedStdDev;
+
+  // Clamp to reasonable range
+  return Math.max(-3, Math.min(3, sharpe));
 }
