@@ -1,0 +1,282 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ===========================================
+   Echelon Global Styles - Dark Mode Premium
+   =========================================== */
+
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 222.2 84% 4.9%;
+    --card: 0 0% 100%;
+    --card-foreground: 222.2 84% 4.9%;
+    --primary: 60 8% 63%;
+    --primary-foreground: 60 10% 10%;
+    --secondary: 210 40% 96.1%;
+    --secondary-foreground: 222.2 47.4% 11.2%;
+    --muted: 210 40% 96.1%;
+    --muted-foreground: 215.4 16.3% 46.9%;
+    --accent: 210 40% 96.1%;
+    --accent-foreground: 222.2 47.4% 11.2%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 214.3 31.8% 91.4%;
+    --input: 214.3 31.8% 91.4%;
+    --ring: 60 8% 63%;
+    --radius: 0.5rem;
+
+    /* Dark Mode Premium Variables - Slate/Charcoal */
+    --dark-bg-primary: #0a0f14;
+    --dark-bg-secondary: #0f161d;
+    --dark-bg-tertiary: #151e28;
+    --dark-surface: rgba(255, 255, 255, 0.03);
+    --dark-surface-hover: rgba(255, 255, 255, 0.05);
+    --dark-border: rgba(255, 255, 255, 0.06);
+    --dark-border-hover: rgba(255, 255, 255, 0.1);
+
+    /* Glass effect */
+    --glass-bg: rgba(255, 255, 255, 0.03);
+    --glass-border: rgba(255, 255, 255, 0.06);
+
+    /* Glow effects - Muted and subtle */
+    --glow-profit: rgba(138, 154, 122, 0.3);
+    --glow-loss: rgba(200, 100, 100, 0.25);
+    --glow-primary: rgba(212, 212, 196, 0.2);
+  }
+
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply text-foreground;
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
+}
+
+@layer components {
+  /* Card variants */
+  .card {
+    @apply bg-white rounded-xl shadow-sm border border-gray-100;
+  }
+
+  .card-hover {
+    @apply card hover:shadow-md hover:border-gray-200 transition-all duration-200;
+  }
+
+  /* Glass morphism cards for dark mode premium */
+  .glass-card {
+    @apply rounded-2xl;
+    background: rgba(21, 30, 40, 0.85);
+    border: 1px solid var(--glass-border);
+    /* Reduced blur for better performance - prevents flickering */
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+  }
+
+  .glass-card-hover {
+    @apply glass-card transition-all duration-300;
+  }
+
+  .glass-card-hover:hover {
+    background: var(--dark-surface-hover);
+    border-color: var(--dark-border-hover);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  }
+
+  /* Glass card with glow effects - Muted */
+  .glass-card-glow-green:hover {
+    box-shadow: 0 0 30px -10px rgba(138, 154, 122, 0.3);
+  }
+
+  .glass-card-glow-red:hover {
+    box-shadow: 0 0 30px -10px rgba(200, 100, 100, 0.25);
+  }
+
+  .glass-card-glow-primary:hover {
+    box-shadow: 0 0 30px -10px rgba(212, 212, 196, 0.2);
+  }
+
+  /* Dark premium body background - Slate with subtle cream glow */
+  .dark-premium {
+    @apply min-h-screen;
+    color: #d4d4c8;
+    background-color: #0a0f14;
+    background-image:
+      radial-gradient(ellipse 80% 50% at 50% -20%, rgba(212, 212, 196, 0.04), transparent),
+      radial-gradient(ellipse 60% 40% at 100% 100%, rgba(201, 184, 150, 0.03), transparent);
+  }
+
+  /* Dark premium header */
+  .dark-header {
+    @apply border-b;
+    background: rgba(10, 15, 20, 0.92);
+    border-color: rgba(212, 212, 196, 0.08);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+  }
+
+  /* Button base styles */
+  .btn {
+    @apply inline-flex items-center justify-center rounded-lg font-medium transition-colors;
+    @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2;
+    @apply disabled:pointer-events-none disabled:opacity-50;
+  }
+
+  .btn-primary {
+    @apply btn bg-primary-600 text-white hover:bg-primary-700;
+  }
+
+  .btn-secondary {
+    @apply btn bg-gray-100 text-gray-900 hover:bg-gray-200;
+  }
+
+  .btn-outline {
+    @apply btn border border-gray-300 bg-transparent hover:bg-gray-50;
+  }
+
+  .btn-ghost {
+    @apply btn bg-transparent hover:bg-gray-100;
+  }
+
+  .btn-danger {
+    @apply btn bg-danger-500 text-white hover:bg-danger-600;
+  }
+
+  /* Badge styles */
+  .badge {
+    @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium;
+  }
+
+  .badge-primary {
+    @apply badge bg-primary-100 text-primary-800;
+  }
+
+  .badge-success {
+    @apply badge bg-success-50 text-success-600;
+  }
+
+  .badge-danger {
+    @apply badge bg-danger-50 text-danger-600;
+  }
+
+  .badge-warning {
+    @apply badge bg-warning-50 text-warning-600;
+  }
+
+  .badge-gray {
+    @apply badge bg-gray-100 text-gray-800;
+  }
+
+  /* Score indicator */
+  .score-high {
+    @apply text-success-600;
+  }
+
+  .score-medium {
+    @apply text-warning-600;
+  }
+
+  .score-low {
+    @apply text-danger-600;
+  }
+
+  /* Skeleton loading - Dark theme */
+  .skeleton {
+    @apply animate-pulse rounded;
+    background: rgba(212, 212, 196, 0.1);
+  }
+
+  /* Table styles - Dark theme */
+  .table-row-hover {
+    @apply transition-colors;
+  }
+  .table-row-hover:hover {
+    background: rgba(212, 212, 196, 0.05);
+  }
+}
+
+@layer utilities {
+  /* Text gradient */
+  .text-gradient {
+    @apply bg-clip-text text-transparent bg-gradient-to-r from-primary-600 to-primary-400;
+  }
+
+  /* Scrollbar styles */
+  .scrollbar-thin {
+    scrollbar-width: thin;
+    scrollbar-color: theme("colors.gray.300") transparent;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar-thumb {
+    background-color: theme("colors.gray.300");
+    border-radius: 3px;
+  }
+
+  /* Focus ring */
+  .focus-ring {
+    @apply focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2;
+  }
+
+  /* Truncate with ellipsis */
+  .truncate-address {
+    max-width: 120px;
+  }
+
+  /* Animation utilities */
+  .animate-in {
+    animation: fadeIn 0.3s ease-out;
+  }
+
+  .animate-slide-up {
+    animation: slideUp 0.3s ease-out;
+  }
+}
+
+/* Custom animations */
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.shimmer {
+  background: linear-gradient(
+    90deg,
+    rgba(212, 212, 196, 0.08) 0%,
+    rgba(212, 212, 196, 0.15) 50%,
+    rgba(212, 212, 196, 0.08) 100%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+}
+
+/* Wallet button styles */
+.wallet-connected {
+  @apply bg-success-50 border-success-500 text-success-600;
+}
+
+/* Chart tooltip customization - Dark theme */
+.recharts-tooltip-wrapper {
+  @apply !outline-none;
+}
+
+.recharts-default-tooltip {
+  background: #151e28 !important;
+  border: 1px solid rgba(212, 212, 196, 0.15) !important;
+  @apply !rounded-lg !shadow-lg !p-3;
+}
