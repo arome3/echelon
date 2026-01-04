@@ -11,12 +11,12 @@ contract AgentRegistryTest is Test, IERC721Receiver {
     AgentRegistry public registry;
 
     /// @notice ERC721 receiver callback to accept NFT mints
-    function onERC721Received(
-        address,
-        address,
-        uint256,
-        bytes calldata
-    ) external pure override returns (bytes4) {
+    function onERC721Received(address, address, uint256, bytes calldata)
+        external
+        pure
+        override
+        returns (bytes4)
+    {
         return IERC721Receiver.onERC721Received.selector;
     }
 
@@ -44,14 +44,9 @@ contract AgentRegistryTest is Test, IERC721Receiver {
 
     function test_Register_WithMetadata() public {
         IERC8004Identity.MetadataEntry[] memory entries = new IERC8004Identity.MetadataEntry[](2);
-        entries[0] = IERC8004Identity.MetadataEntry({
-            key: "name",
-            value: abi.encode("My Agent")
-        });
-        entries[1] = IERC8004Identity.MetadataEntry({
-            key: "strategyType",
-            value: abi.encode("DCA")
-        });
+        entries[0] = IERC8004Identity.MetadataEntry({ key: "name", value: abi.encode("My Agent") });
+        entries[1] =
+            IERC8004Identity.MetadataEntry({ key: "strategyType", value: abi.encode("DCA") });
 
         vm.prank(user1);
         uint256 agentId = registry.register("ipfs://agent", entries);
@@ -157,13 +152,8 @@ contract AgentRegistryTest is Test, IERC721Receiver {
 
     function test_RegisterAgent() public {
         vm.prank(user1);
-        uint256 agentId = registry.registerAgent(
-            agentWallet1,
-            "Test Agent",
-            "DCA",
-            5,
-            "ipfs://test"
-        );
+        uint256 agentId =
+            registry.registerAgent(agentWallet1, "Test Agent", "DCA", 5, "ipfs://test");
 
         assertEq(agentId, 1);
         assertEq(registry.totalAgents(), 1);
@@ -176,13 +166,8 @@ contract AgentRegistryTest is Test, IERC721Receiver {
 
     function test_RegisterAgent_StoresAsMetadata() public {
         vm.prank(user1);
-        uint256 agentId = registry.registerAgent(
-            agentWallet1,
-            "Test Agent",
-            "DCA",
-            5,
-            "ipfs://test"
-        );
+        uint256 agentId =
+            registry.registerAgent(agentWallet1, "Test Agent", "DCA", 5, "ipfs://test");
 
         // Verify data is stored as ERC-8004 metadata
         bytes memory walletData = registry.getMetadata(agentId, "walletAddress");
@@ -260,13 +245,8 @@ contract AgentRegistryTest is Test, IERC721Receiver {
 
     function test_UpdateAgentMetadata() public {
         vm.startPrank(user1);
-        uint256 agentId = registry.registerAgent(
-            agentWallet1,
-            "Test Agent",
-            "DCA",
-            5,
-            "ipfs://original"
-        );
+        uint256 agentId =
+            registry.registerAgent(agentWallet1, "Test Agent", "DCA", 5, "ipfs://original");
 
         registry.updateAgentMetadata(agentId, "ipfs://updated");
         vm.stopPrank();
@@ -276,13 +256,8 @@ contract AgentRegistryTest is Test, IERC721Receiver {
 
     function test_RevertWhen_UpdateAgentMetadata_NotOwner() public {
         vm.prank(user1);
-        uint256 agentId = registry.registerAgent(
-            agentWallet1,
-            "Test Agent",
-            "DCA",
-            5,
-            "ipfs://test"
-        );
+        uint256 agentId =
+            registry.registerAgent(agentWallet1, "Test Agent", "DCA", 5, "ipfs://test");
 
         vm.prank(user2);
         vm.expectRevert("Not agent owner");
@@ -293,13 +268,8 @@ contract AgentRegistryTest is Test, IERC721Receiver {
 
     function test_DeactivateAgent() public {
         vm.startPrank(user1);
-        uint256 agentId = registry.registerAgent(
-            agentWallet1,
-            "Test Agent",
-            "DCA",
-            5,
-            "ipfs://test"
-        );
+        uint256 agentId =
+            registry.registerAgent(agentWallet1, "Test Agent", "DCA", 5, "ipfs://test");
 
         registry.deactivateAgent(agentId);
         vm.stopPrank();
@@ -315,13 +285,8 @@ contract AgentRegistryTest is Test, IERC721Receiver {
 
     function test_ReactivateAgent() public {
         vm.startPrank(user1);
-        uint256 agentId = registry.registerAgent(
-            agentWallet1,
-            "Test Agent",
-            "DCA",
-            5,
-            "ipfs://test"
-        );
+        uint256 agentId =
+            registry.registerAgent(agentWallet1, "Test Agent", "DCA", 5, "ipfs://test");
 
         registry.deactivateAgent(agentId);
         registry.reactivateAgent(agentId);
@@ -333,13 +298,8 @@ contract AgentRegistryTest is Test, IERC721Receiver {
 
     function test_RevertWhen_DeactivateAgent_NotOwner() public {
         vm.prank(user1);
-        uint256 agentId = registry.registerAgent(
-            agentWallet1,
-            "Test Agent",
-            "DCA",
-            5,
-            "ipfs://test"
-        );
+        uint256 agentId =
+            registry.registerAgent(agentWallet1, "Test Agent", "DCA", 5, "ipfs://test");
 
         vm.prank(user2);
         vm.expectRevert("Not agent owner");
@@ -348,13 +308,8 @@ contract AgentRegistryTest is Test, IERC721Receiver {
 
     function test_RevertWhen_DeactivateAgent_AlreadyDeactivated() public {
         vm.startPrank(user1);
-        uint256 agentId = registry.registerAgent(
-            agentWallet1,
-            "Test Agent",
-            "DCA",
-            5,
-            "ipfs://test"
-        );
+        uint256 agentId =
+            registry.registerAgent(agentWallet1, "Test Agent", "DCA", 5, "ipfs://test");
 
         registry.deactivateAgent(agentId);
         vm.expectRevert("Already deactivated");
@@ -364,13 +319,8 @@ contract AgentRegistryTest is Test, IERC721Receiver {
 
     function test_RevertWhen_ReactivateAgent_AlreadyActive() public {
         vm.startPrank(user1);
-        uint256 agentId = registry.registerAgent(
-            agentWallet1,
-            "Test Agent",
-            "DCA",
-            5,
-            "ipfs://test"
-        );
+        uint256 agentId =
+            registry.registerAgent(agentWallet1, "Test Agent", "DCA", 5, "ipfs://test");
 
         vm.expectRevert("Already active");
         registry.reactivateAgent(agentId); // Should fail - already active
@@ -383,9 +333,8 @@ contract AgentRegistryTest is Test, IERC721Receiver {
         vm.prank(user1);
         registry.registerAgent(agentWallet1, "Test Agent", "DCA", 5, "ipfs://test");
 
-        (uint256 agentId, IAgentRegistry.AgentMetadata memory meta) = registry.getAgentByWallet(
-            agentWallet1
-        );
+        (uint256 agentId, IAgentRegistry.AgentMetadata memory meta) =
+            registry.getAgentByWallet(agentWallet1);
 
         assertEq(agentId, 1);
         assertEq(meta.walletAddress, agentWallet1);
@@ -474,13 +423,8 @@ contract AgentRegistryTest is Test, IERC721Receiver {
     function testFuzz_RegisterAgent_RiskLevel(uint8 riskLevel) public {
         vm.assume(riskLevel >= 1 && riskLevel <= 10);
 
-        uint256 agentId = registry.registerAgent(
-            agentWallet1,
-            "Test Agent",
-            "DCA",
-            riskLevel,
-            "ipfs://test"
-        );
+        uint256 agentId =
+            registry.registerAgent(agentWallet1, "Test Agent", "DCA", riskLevel, "ipfs://test");
 
         IAgentRegistry.AgentMetadata memory meta = registry.agents(agentId);
         assertEq(meta.riskLevel, riskLevel);
@@ -508,13 +452,7 @@ contract AgentRegistryTest is Test, IERC721Receiver {
         uint256 agent1 = registry.register("ipfs://agent1");
 
         // Use legacy registerAgent
-        uint256 agent2 = registry.registerAgent(
-            agentWallet1,
-            "Agent 2",
-            "DCA",
-            5,
-            "ipfs://agent2"
-        );
+        uint256 agent2 = registry.registerAgent(agentWallet1, "Agent 2", "DCA", 5, "ipfs://agent2");
 
         vm.stopPrank();
 

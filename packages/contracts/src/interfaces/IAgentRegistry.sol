@@ -14,7 +14,8 @@ interface IAgentRegistry is IERC8004Identity {
 
     /**
      * @notice Legacy struct for backward compatibility with existing integrations
-     * @dev Data is stored as ERC-8004 metadata internally but decoded to this struct for convenience
+     * @dev Data is stored as ERC-8004 metadata internally but decoded to this struct for
+     * convenience
      */
     struct AgentMetadata {
         address walletAddress;

@@ -134,22 +134,13 @@ contract ValidationRegistry is IERC8004Validation {
         record.lastUpdate = block.timestamp;
         record.hasResponse = true;
 
-        emit ValidationResponse(
-            msg.sender,
-            record.agentId,
-            requestHash,
-            response,
-            responseUri,
-            tag
-        );
+        emit ValidationResponse(msg.sender, record.agentId, requestHash, response, responseUri, tag);
     }
 
     // ============ View Functions ============
 
     /// @inheritdoc IERC8004Validation
-    function getValidationStatus(
-        bytes32 requestHash
-    )
+    function getValidationStatus(bytes32 requestHash)
         external
         view
         returns (
@@ -163,21 +154,22 @@ contract ValidationRegistry is IERC8004Validation {
         require(_requestExists[requestHash], "Request does not exist");
 
         ValidationRecord storage record = _validations[requestHash];
-        return (
-            record.validatorAddress,
-            record.agentId,
-            record.response,
-            record.tag,
-            record.lastUpdate
-        );
+        return
+            (
+                record.validatorAddress,
+                record.agentId,
+                record.response,
+                record.tag,
+                record.lastUpdate
+            );
     }
 
     /// @inheritdoc IERC8004Validation
-    function getSummary(
-        uint256 agentId,
-        address[] calldata validatorAddresses,
-        bytes32 tag
-    ) external view returns (uint64 count, uint8 avgResponse) {
+    function getSummary(uint256 agentId, address[] calldata validatorAddresses, bytes32 tag)
+        external
+        view
+        returns (uint64 count, uint8 avgResponse)
+    {
         bytes32[] storage requestHashes = _agentValidations[agentId];
 
         uint256 totalResponse = 0;
@@ -213,16 +205,20 @@ contract ValidationRegistry is IERC8004Validation {
     }
 
     /// @inheritdoc IERC8004Validation
-    function getAgentValidations(
-        uint256 agentId
-    ) external view returns (bytes32[] memory requestHashes) {
+    function getAgentValidations(uint256 agentId)
+        external
+        view
+        returns (bytes32[] memory requestHashes)
+    {
         return _agentValidations[agentId];
     }
 
     /// @inheritdoc IERC8004Validation
-    function getValidatorRequests(
-        address validatorAddress
-    ) external view returns (bytes32[] memory requestHashes) {
+    function getValidatorRequests(address validatorAddress)
+        external
+        view
+        returns (bytes32[] memory requestHashes)
+    {
         return _validatorRequests[validatorAddress];
     }
 
@@ -238,9 +234,7 @@ contract ValidationRegistry is IERC8004Validation {
      * @return tag Categorization tag
      * @return hasResponse Whether a response has been submitted
      */
-    function getValidationDetails(
-        bytes32 requestHash
-    )
+    function getValidationDetails(bytes32 requestHash)
         external
         view
         returns (
@@ -283,9 +277,11 @@ contract ValidationRegistry is IERC8004Validation {
      * @param validatorAddress The validator address
      * @return pendingHashes Array of pending request hashes
      */
-    function getPendingRequests(
-        address validatorAddress
-    ) external view returns (bytes32[] memory pendingHashes) {
+    function getPendingRequests(address validatorAddress)
+        external
+        view
+        returns (bytes32[] memory pendingHashes)
+    {
         bytes32[] storage allRequests = _validatorRequests[validatorAddress];
 
         // Count pending
@@ -328,10 +324,11 @@ contract ValidationRegistry is IERC8004Validation {
      * @param account The address to check
      * @return isOwnerOrOperator Whether the address is owner or operator
      */
-    function _isAgentOwnerOrOperator(
-        uint256 agentId,
-        address account
-    ) internal view returns (bool isOwnerOrOperator) {
+    function _isAgentOwnerOrOperator(uint256 agentId, address account)
+        internal
+        view
+        returns (bool isOwnerOrOperator)
+    {
         IERC721 registry = IERC721(identityRegistry);
 
         // Check if owner

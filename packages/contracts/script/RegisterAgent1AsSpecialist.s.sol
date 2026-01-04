@@ -31,7 +31,7 @@ contract RegisterAgent1AsSpecialist is Script {
             agent1Wallet,
             "GridGuru",
             "GridTrading",
-            4,  // Medium-low risk - range-based trading
+            4, // Medium-low risk - range-based trading
             "ipfs://QmGridGuru"
         );
         console.log("Registered GridGuru (ID:", agentId, ")");

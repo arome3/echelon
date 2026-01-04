@@ -38,7 +38,7 @@ contract RegisterAgent5 is Script {
             agent5Wallet,
             "MomentumMaster",
             "Momentum",
-            6,  // Medium-high risk - trend following
+            6, // Medium-high risk - trend following
             "ipfs://QmMomentumMaster"
         );
         console.log("Registered Agent 5: MomentumMaster (ID:", agent5Id, ")");

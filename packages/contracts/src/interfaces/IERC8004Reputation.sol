@@ -36,9 +36,7 @@ interface IERC8004Reputation {
      * @param feedbackIndex The index of the revoked feedback
      */
     event FeedbackRevoked(
-        uint256 indexed agentId,
-        address indexed clientAddress,
-        uint64 indexed feedbackIndex
+        uint256 indexed agentId, address indexed clientAddress, uint64 indexed feedbackIndex
     );
 
     /**
@@ -137,11 +135,10 @@ interface IERC8004Reputation {
      * @return tag2 Secondary categorization tag
      * @return isRevoked Whether the feedback has been revoked
      */
-    function readFeedback(
-        uint256 agentId,
-        address clientAddress,
-        uint64 index
-    ) external view returns (uint8 score, bytes32 tag1, bytes32 tag2, bool isRevoked);
+    function readFeedback(uint256 agentId, address clientAddress, uint64 index)
+        external
+        view
+        returns (uint8 score, bytes32 tag1, bytes32 tag2, bool isRevoked);
 
     /**
      * @notice Read all feedback for an agent with filtering
@@ -201,8 +198,8 @@ interface IERC8004Reputation {
      * @param clientAddress The client
      * @return index The last feedback index (0 if no feedback)
      */
-    function getLastIndex(
-        uint256 agentId,
-        address clientAddress
-    ) external view returns (uint64 index);
+    function getLastIndex(uint256 agentId, address clientAddress)
+        external
+        view
+        returns (uint64 index);
 }

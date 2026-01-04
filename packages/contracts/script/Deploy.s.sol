@@ -48,7 +48,8 @@ contract DeployScript is Script {
         EnvioReputationOracle oracle = new EnvioReputationOracle();
         console.log("EnvioReputationOracle deployed to:", address(oracle));
 
-        // 7. Configure the oracle updater (set to deployer initially - update to sync service later)
+        // 7. Configure the oracle updater (set to deployer initially - update to sync service
+        // later)
         address deployer = vm.addr(deployerPrivateKey);
         oracle.setEnvioUpdater(deployer);
         console.log("EnvioReputationOracle updater set to deployer:", deployer);

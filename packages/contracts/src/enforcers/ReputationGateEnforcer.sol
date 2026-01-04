@@ -20,7 +20,8 @@ import "../interfaces/ICaveatEnforcer.sol";
  *
  * Formula for active limit:
  *      If score <= minReputationScore: activeLimit = baseAmount
- *      Else: activeLimit = baseAmount + (maxAmount - baseAmount) * (score - minScore) / (100 - minScore)
+ *      Else: activeLimit = baseAmount + (maxAmount - baseAmount) * (score - minScore) / (100 -
+ * minScore)
  *
  * Example with baseAmount=1 USDC, maxAmount=100 USDC, minScore=40:
  *      - Score 40: 1 USDC (minimum)
@@ -202,9 +203,8 @@ contract ReputationGateEnforcer is ICaveatEnforcer {
 
         activeLimit = _calculateActiveLimit(terms, currentScore);
 
-        isStale = terms.maxStaleness > 0 &&
-            lastUpdated != 0 &&
-            block.timestamp - lastUpdated > terms.maxStaleness;
+        isStale = terms.maxStaleness > 0 && lastUpdated != 0
+            && block.timestamp - lastUpdated > terms.maxStaleness;
     }
 
     /**
@@ -238,13 +238,15 @@ contract ReputationGateEnforcer is ICaveatEnforcer {
         uint8 minReputationScore,
         uint256 maxStaleness
     ) external pure returns (bytes memory) {
-        return abi.encode(Terms({
-            agentAddress: agentAddress,
-            baseAmount: baseAmount,
-            maxAmount: maxAmount,
-            minReputationScore: minReputationScore,
-            maxStaleness: maxStaleness
-        }));
+        return abi.encode(
+            Terms({
+                agentAddress: agentAddress,
+                baseAmount: baseAmount,
+                maxAmount: maxAmount,
+                minReputationScore: minReputationScore,
+                maxStaleness: maxStaleness
+            })
+        );
     }
 
     // ============ Internal Functions ============
@@ -256,7 +258,11 @@ contract ReputationGateEnforcer is ICaveatEnforcer {
      * @param score The current reputation score
      * @return The calculated active limit
      */
-    function _calculateActiveLimit(Terms memory terms, uint8 score) internal pure returns (uint256) {
+    function _calculateActiveLimit(Terms memory terms, uint8 score)
+        internal
+        pure
+        returns (uint256)
+    {
         // If below minimum score, only allow base amount
         if (score <= terms.minReputationScore) {
             return terms.baseAmount;

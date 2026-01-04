@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.24;
 
-import {Script, console} from "forge-std/Script.sol";
-import {MockUSDC} from "../src/MockUSDC.sol";
+import { Script, console } from "forge-std/Script.sol";
+import { MockUSDC } from "../src/MockUSDC.sol";
 
 /**
  * @title DeployMockUSDC
@@ -32,7 +32,11 @@ contract DeployMockUSDCScript is Script {
         console.log("NEXT_PUBLIC_USDC_ADDRESS=", address(usdc));
         console.log("");
         console.log("To mint more tokens:");
-        console.log("cast send", address(usdc), "faucet(uint256)" "1000" "--rpc-url $SEPOLIA_RPC_URL --private-key $PRIVATE_KEY");
+        console.log(
+            "cast send",
+            address(usdc),
+            "faucet(uint256)" "1000" "--rpc-url $SEPOLIA_RPC_URL --private-key $PRIVATE_KEY"
+        );
 
         vm.stopBroadcast();
     }

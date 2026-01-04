@@ -21,8 +21,8 @@ contract ReputationGateEnforcerTest is Test {
     address public usdc = address(0x2BfBc55F4A360352Dc89e599D04898F150472cA6);
 
     // Default terms for testing
-    uint256 public constant BASE_AMOUNT = 1e6;    // 1 USDC
-    uint256 public constant MAX_AMOUNT = 100e6;   // 100 USDC
+    uint256 public constant BASE_AMOUNT = 1e6; // 1 USDC
+    uint256 public constant MAX_AMOUNT = 100e6; // 100 USDC
     uint8 public constant MIN_SCORE = 40;
     uint256 public constant MAX_STALENESS = 3600; // 1 hour
 
@@ -42,13 +42,15 @@ contract ReputationGateEnforcerTest is Test {
         uint8 minReputationScore,
         uint256 maxStaleness
     ) internal pure returns (bytes memory) {
-        return abi.encode(ReputationGateEnforcer.Terms({
-            agentAddress: agentAddress,
-            baseAmount: baseAmount,
-            maxAmount: maxAmount,
-            minReputationScore: minReputationScore,
-            maxStaleness: maxStaleness
-        }));
+        return abi.encode(
+            ReputationGateEnforcer.Terms({
+                agentAddress: agentAddress,
+                baseAmount: baseAmount,
+                maxAmount: maxAmount,
+                minReputationScore: minReputationScore,
+                maxStaleness: maxStaleness
+            })
+        );
     }
 
     function _encodeDefaultTerms(address agentAddress) internal pure returns (bytes memory) {
@@ -59,11 +61,19 @@ contract ReputationGateEnforcerTest is Test {
         return abi.encodeWithSelector(bytes4(0xa9059cbb), to, amount);
     }
 
-    function _encodeERC20TransferFrom(address from, address to, uint256 amount) internal pure returns (bytes memory) {
+    function _encodeERC20TransferFrom(address from, address to, uint256 amount)
+        internal
+        pure
+        returns (bytes memory)
+    {
         return abi.encodeWithSelector(bytes4(0x23b872dd), from, to, amount);
     }
 
-    function _encodeERC20Approve(address spender, uint256 amount) internal pure returns (bytes memory) {
+    function _encodeERC20Approve(address spender, uint256 amount)
+        internal
+        pure
+        returns (bytes memory)
+    {
         return abi.encodeWithSelector(bytes4(0x095ea7b3), spender, amount);
     }
 
@@ -86,7 +96,7 @@ contract ReputationGateEnforcerTest is Test {
         oracle.updateReputation(agent1, 40);
 
         bytes memory terms = _encodeDefaultTerms(agent1);
-        (uint256 limit, uint8 score, ) = enforcer.getActiveLimit(terms);
+        (uint256 limit, uint8 score,) = enforcer.getActiveLimit(terms);
 
         assertEq(score, 40);
         assertEq(limit, BASE_AMOUNT); // Should be base amount
@@ -98,7 +108,7 @@ contract ReputationGateEnforcerTest is Test {
         oracle.updateReputation(agent1, 30);
 
         bytes memory terms = _encodeDefaultTerms(agent1);
-        (uint256 limit, uint8 score, ) = enforcer.getActiveLimit(terms);
+        (uint256 limit, uint8 score,) = enforcer.getActiveLimit(terms);
 
         assertEq(score, 30);
         assertEq(limit, BASE_AMOUNT); // Still base amount
@@ -110,7 +120,7 @@ contract ReputationGateEnforcerTest is Test {
         oracle.updateReputation(agent1, 100);
 
         bytes memory terms = _encodeDefaultTerms(agent1);
-        (uint256 limit, uint8 score, ) = enforcer.getActiveLimit(terms);
+        (uint256 limit, uint8 score,) = enforcer.getActiveLimit(terms);
 
         assertEq(score, 100);
         assertEq(limit, MAX_AMOUNT); // Should be max amount
@@ -124,7 +134,7 @@ contract ReputationGateEnforcerTest is Test {
         oracle.updateReputation(agent1, 70);
 
         bytes memory terms = _encodeDefaultTerms(agent1);
-        (uint256 limit, , ) = enforcer.getActiveLimit(terms);
+        (uint256 limit,,) = enforcer.getActiveLimit(terms);
 
         uint256 expectedLimit = BASE_AMOUNT + ((MAX_AMOUNT - BASE_AMOUNT) * 30) / 60;
         assertEq(limit, expectedLimit);
@@ -133,7 +143,7 @@ contract ReputationGateEnforcerTest is Test {
     function test_CalculateLimit_DefaultNeutralScore() public view {
         // Agent never rated - should get neutral score of 50
         bytes memory terms = _encodeDefaultTerms(agent1);
-        (uint256 limit, uint8 score, ) = enforcer.getActiveLimit(terms);
+        (uint256 limit, uint8 score,) = enforcer.getActiveLimit(terms);
 
         assertEq(score, 50); // Default neutral
         // Progress = (50 - 40) / (100 - 40) = 10/60 = 1/6
@@ -148,7 +158,7 @@ contract ReputationGateEnforcerTest is Test {
         oracle.updateReputation(agent1, 70);
 
         bytes memory terms = _encodeDefaultTerms(agent1);
-        (uint256 activeLimit, , ) = enforcer.getActiveLimit(terms);
+        (uint256 activeLimit,,) = enforcer.getActiveLimit(terms);
 
         // Request less than active limit
         uint256 requestAmount = activeLimit - 1e6;
@@ -156,13 +166,7 @@ contract ReputationGateEnforcerTest is Test {
 
         // Should not revert
         enforcer.beforeHook(
-            terms,
-            "",
-            ModeCode.wrap(bytes32(0)),
-            calldata_,
-            bytes32(0),
-            delegator,
-            redeemer
+            terms, "", ModeCode.wrap(bytes32(0)), calldata_, bytes32(0), delegator, redeemer
         );
     }
 
@@ -171,19 +175,13 @@ contract ReputationGateEnforcerTest is Test {
         oracle.updateReputation(agent1, 70);
 
         bytes memory terms = _encodeDefaultTerms(agent1);
-        (uint256 activeLimit, , ) = enforcer.getActiveLimit(terms);
+        (uint256 activeLimit,,) = enforcer.getActiveLimit(terms);
 
         bytes memory calldata_ = _encodeERC20Transfer(redeemer, activeLimit);
 
         // Should not revert
         enforcer.beforeHook(
-            terms,
-            "",
-            ModeCode.wrap(bytes32(0)),
-            calldata_,
-            bytes32(0),
-            delegator,
-            redeemer
+            terms, "", ModeCode.wrap(bytes32(0)), calldata_, bytes32(0), delegator, redeemer
         );
     }
 
@@ -192,7 +190,7 @@ contract ReputationGateEnforcerTest is Test {
         oracle.updateReputation(agent1, 70);
 
         bytes memory terms = _encodeDefaultTerms(agent1);
-        (uint256 activeLimit, , ) = enforcer.getActiveLimit(terms);
+        (uint256 activeLimit,,) = enforcer.getActiveLimit(terms);
 
         // Request more than active limit
         uint256 requestAmount = activeLimit + 1;
@@ -200,19 +198,11 @@ contract ReputationGateEnforcerTest is Test {
 
         vm.expectRevert(
             abi.encodeWithSelector(
-                ReputationGateEnforcer.ExceedsReputationLimit.selector,
-                requestAmount,
-                activeLimit
+                ReputationGateEnforcer.ExceedsReputationLimit.selector, requestAmount, activeLimit
             )
         );
         enforcer.beforeHook(
-            terms,
-            "",
-            ModeCode.wrap(bytes32(0)),
-            calldata_,
-            bytes32(0),
-            delegator,
-            redeemer
+            terms, "", ModeCode.wrap(bytes32(0)), calldata_, bytes32(0), delegator, redeemer
         );
     }
 
@@ -224,20 +214,10 @@ contract ReputationGateEnforcerTest is Test {
         bytes memory calldata_ = _encodeERC20Transfer(redeemer, 1e6);
 
         vm.expectRevert(
-            abi.encodeWithSelector(
-                ReputationGateEnforcer.ReputationTooLow.selector,
-                30,
-                40
-            )
+            abi.encodeWithSelector(ReputationGateEnforcer.ReputationTooLow.selector, 30, 40)
         );
         enforcer.beforeHook(
-            terms,
-            "",
-            ModeCode.wrap(bytes32(0)),
-            calldata_,
-            bytes32(0),
-            delegator,
-            redeemer
+            terms, "", ModeCode.wrap(bytes32(0)), calldata_, bytes32(0), delegator, redeemer
         );
     }
 
@@ -255,19 +235,11 @@ contract ReputationGateEnforcerTest is Test {
 
         vm.expectRevert(
             abi.encodeWithSelector(
-                ReputationGateEnforcer.StaleReputationData.selector,
-                1000,
-                MAX_STALENESS
+                ReputationGateEnforcer.StaleReputationData.selector, 1000, MAX_STALENESS
             )
         );
         enforcer.beforeHook(
-            terms,
-            "",
-            ModeCode.wrap(bytes32(0)),
-            calldata_,
-            bytes32(0),
-            delegator,
-            redeemer
+            terms, "", ModeCode.wrap(bytes32(0)), calldata_, bytes32(0), delegator, redeemer
         );
     }
 
@@ -278,7 +250,7 @@ contract ReputationGateEnforcerTest is Test {
         oracle.updateReputation(agent1, 70);
 
         // Advance time significantly
-        vm.warp(1000 + 1000000);
+        vm.warp(1000 + 1_000_000);
 
         // Terms with maxStaleness = 0 (no staleness check)
         bytes memory terms = _encodeTerms(agent1, BASE_AMOUNT, MAX_AMOUNT, MIN_SCORE, 0);
@@ -286,13 +258,7 @@ contract ReputationGateEnforcerTest is Test {
 
         // Should not revert despite old data
         enforcer.beforeHook(
-            terms,
-            "",
-            ModeCode.wrap(bytes32(0)),
-            calldata_,
-            bytes32(0),
-            delegator,
-            redeemer
+            terms, "", ModeCode.wrap(bytes32(0)), calldata_, bytes32(0), delegator, redeemer
         );
     }
 
@@ -303,13 +269,7 @@ contract ReputationGateEnforcerTest is Test {
 
         // Should not revert - new agents can execute with base amounts
         enforcer.beforeHook(
-            terms,
-            "",
-            ModeCode.wrap(bytes32(0)),
-            calldata_,
-            bytes32(0),
-            delegator,
-            redeemer
+            terms, "", ModeCode.wrap(bytes32(0)), calldata_, bytes32(0), delegator, redeemer
         );
     }
 
@@ -327,13 +287,7 @@ contract ReputationGateEnforcerTest is Test {
 
         // Should allow since 50e6 < 100e6
         enforcer.beforeHook(
-            terms,
-            "",
-            ModeCode.wrap(bytes32(0)),
-            transferCall,
-            bytes32(0),
-            delegator,
-            redeemer
+            terms, "", ModeCode.wrap(bytes32(0)), transferCall, bytes32(0), delegator, redeemer
         );
     }
 
@@ -348,13 +302,7 @@ contract ReputationGateEnforcerTest is Test {
         bytes memory transferFromCall = _encodeERC20TransferFrom(delegator, redeemer, testAmount);
 
         enforcer.beforeHook(
-            terms,
-            "",
-            ModeCode.wrap(bytes32(0)),
-            transferFromCall,
-            bytes32(0),
-            delegator,
-            redeemer
+            terms, "", ModeCode.wrap(bytes32(0)), transferFromCall, bytes32(0), delegator, redeemer
         );
     }
 
@@ -369,13 +317,7 @@ contract ReputationGateEnforcerTest is Test {
         bytes memory approveCall = _encodeERC20Approve(redeemer, testAmount);
 
         enforcer.beforeHook(
-            terms,
-            "",
-            ModeCode.wrap(bytes32(0)),
-            approveCall,
-            bytes32(0),
-            delegator,
-            redeemer
+            terms, "", ModeCode.wrap(bytes32(0)), approveCall, bytes32(0), delegator, redeemer
         );
     }
 
@@ -390,13 +332,7 @@ contract ReputationGateEnforcerTest is Test {
 
         // Should not revert - unrecognized calldata returns 0 amount
         enforcer.beforeHook(
-            terms,
-            "",
-            ModeCode.wrap(bytes32(0)),
-            randomCall,
-            bytes32(0),
-            delegator,
-            redeemer
+            terms, "", ModeCode.wrap(bytes32(0)), randomCall, bytes32(0), delegator, redeemer
         );
     }
 
@@ -404,35 +340,23 @@ contract ReputationGateEnforcerTest is Test {
 
     function test_BeforeAllHook_ValidatesTerms() public {
         // Invalid terms - agent address is zero
-        bytes memory invalidTerms = _encodeTerms(
-            address(0),
-            BASE_AMOUNT,
-            MAX_AMOUNT,
-            MIN_SCORE,
-            MAX_STALENESS
-        );
+        bytes memory invalidTerms =
+            _encodeTerms(address(0), BASE_AMOUNT, MAX_AMOUNT, MIN_SCORE, MAX_STALENESS);
 
         vm.expectRevert(
             abi.encodeWithSelector(
-                ReputationGateEnforcer.InvalidTerms.selector,
-                "Agent address cannot be zero"
+                ReputationGateEnforcer.InvalidTerms.selector, "Agent address cannot be zero"
             )
         );
         enforcer.beforeAllHook(
-            invalidTerms,
-            "",
-            ModeCode.wrap(bytes32(0)),
-            "",
-            bytes32(0),
-            delegator,
-            redeemer
+            invalidTerms, "", ModeCode.wrap(bytes32(0)), "", bytes32(0), delegator, redeemer
         );
     }
 
     function test_InvalidTerms_BaseExceedsMax() public {
         bytes memory invalidTerms = _encodeTerms(
             agent1,
-            100e6,  // base > max
+            100e6, // base > max
             50e6,
             MIN_SCORE,
             MAX_STALENESS
@@ -440,18 +364,11 @@ contract ReputationGateEnforcerTest is Test {
 
         vm.expectRevert(
             abi.encodeWithSelector(
-                ReputationGateEnforcer.InvalidTerms.selector,
-                "Base amount cannot exceed max amount"
+                ReputationGateEnforcer.InvalidTerms.selector, "Base amount cannot exceed max amount"
             )
         );
         enforcer.beforeAllHook(
-            invalidTerms,
-            "",
-            ModeCode.wrap(bytes32(0)),
-            "",
-            bytes32(0),
-            delegator,
-            redeemer
+            invalidTerms, "", ModeCode.wrap(bytes32(0)), "", bytes32(0), delegator, redeemer
         );
     }
 
@@ -471,32 +388,19 @@ contract ReputationGateEnforcerTest is Test {
             )
         );
         enforcer.beforeAllHook(
-            invalidTerms,
-            "",
-            ModeCode.wrap(bytes32(0)),
-            "",
-            bytes32(0),
-            delegator,
-            redeemer
+            invalidTerms, "", ModeCode.wrap(bytes32(0)), "", bytes32(0), delegator, redeemer
         );
     }
 
     // ============ Helper Function Tests ============
 
     function test_EncodeTerms() public view {
-        bytes memory encoded = enforcer.encodeTerms(
-            agent1,
-            BASE_AMOUNT,
-            MAX_AMOUNT,
-            MIN_SCORE,
-            MAX_STALENESS
-        );
+        bytes memory encoded =
+            enforcer.encodeTerms(agent1, BASE_AMOUNT, MAX_AMOUNT, MIN_SCORE, MAX_STALENESS);
 
         // Decode and verify
-        ReputationGateEnforcer.Terms memory decoded = abi.decode(
-            encoded,
-            (ReputationGateEnforcer.Terms)
-        );
+        ReputationGateEnforcer.Terms memory decoded =
+            abi.decode(encoded, (ReputationGateEnforcer.Terms));
 
         assertEq(decoded.agentAddress, agent1);
         assertEq(decoded.baseAmount, BASE_AMOUNT);
@@ -527,12 +431,12 @@ contract ReputationGateEnforcerTest is Test {
         bytes memory terms = _encodeDefaultTerms(agent1);
 
         // Before staleness
-        (, , bool isStale1) = enforcer.getActiveLimit(terms);
+        (,, bool isStale1) = enforcer.getActiveLimit(terms);
         assertFalse(isStale1);
 
         // After staleness
         vm.warp(1000 + MAX_STALENESS + 1);
-        (, , bool isStale2) = enforcer.getActiveLimit(terms);
+        (,, bool isStale2) = enforcer.getActiveLimit(terms);
         assertTrue(isStale2);
     }
 
@@ -572,13 +476,7 @@ contract ReputationGateEnforcerTest is Test {
 
         // Should not revert for any amount within limit
         enforcer.beforeHook(
-            terms,
-            "",
-            ModeCode.wrap(bytes32(0)),
-            calldata_,
-            bytes32(0),
-            delegator,
-            redeemer
+            terms, "", ModeCode.wrap(bytes32(0)), calldata_, bytes32(0), delegator, redeemer
         );
     }
 
@@ -589,13 +487,7 @@ contract ReputationGateEnforcerTest is Test {
 
         // Should not revert
         enforcer.afterHook(
-            terms,
-            "",
-            ModeCode.wrap(bytes32(0)),
-            "",
-            bytes32(0),
-            delegator,
-            redeemer
+            terms, "", ModeCode.wrap(bytes32(0)), "", bytes32(0), delegator, redeemer
         );
     }
 
@@ -604,13 +496,7 @@ contract ReputationGateEnforcerTest is Test {
 
         // Should not revert
         enforcer.afterAllHook(
-            terms,
-            "",
-            ModeCode.wrap(bytes32(0)),
-            "",
-            bytes32(0),
-            delegator,
-            redeemer
+            terms, "", ModeCode.wrap(bytes32(0)), "", bytes32(0), delegator, redeemer
         );
     }
 }

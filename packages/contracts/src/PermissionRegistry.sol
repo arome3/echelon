@@ -20,14 +20,14 @@ contract PermissionRegistry is Ownable, ReentrancyGuard {
     // ============ Structs ============
 
     struct Permission {
-        address user;           // The user who granted permission
-        address agent;          // The agent wallet that received permission
-        address token;          // Token address (e.g., USDC)
+        address user; // The user who granted permission
+        address agent; // The agent wallet that received permission
+        address token; // Token address (e.g., USDC)
         uint256 amountPerPeriod; // Amount allowed per period
         uint256 periodDuration; // Period duration in seconds
-        uint256 grantedAt;      // Timestamp when permission was granted
-        uint256 expiresAt;      // Timestamp when permission expires
-        bool isActive;          // Whether permission is still active
+        uint256 grantedAt; // Timestamp when permission was granted
+        uint256 expiresAt; // Timestamp when permission expires
+        bool isActive; // Whether permission is still active
         bytes32 permissionHash; // Hash of the ERC-7715 permission data (for verification)
     }
 
@@ -67,17 +67,12 @@ contract PermissionRegistry is Ownable, ReentrancyGuard {
 
     /// @notice Emitted when a permission is revoked
     event PermissionRevoked(
-        bytes32 indexed permissionId,
-        address indexed user,
-        address indexed agent,
-        uint256 revokedAt
+        bytes32 indexed permissionId, address indexed user, address indexed agent, uint256 revokedAt
     );
 
     /// @notice Emitted when a permission expires
     event PermissionExpired(
-        bytes32 indexed permissionId,
-        address indexed user,
-        address indexed agent
+        bytes32 indexed permissionId, address indexed user, address indexed agent
     );
 
     // ============ Errors ============
@@ -92,7 +87,7 @@ contract PermissionRegistry is Ownable, ReentrancyGuard {
 
     // ============ Constructor ============
 
-    constructor() Ownable(msg.sender) {}
+    constructor() Ownable(msg.sender) { }
 
     // ============ External Functions ============
 
@@ -122,15 +117,8 @@ contract PermissionRegistry is Ownable, ReentrancyGuard {
         if (expiresAt <= block.timestamp) revert InvalidDuration();
 
         // Generate unique permission ID
-        permissionId = keccak256(
-            abi.encodePacked(
-                msg.sender,
-                agent,
-                token,
-                block.timestamp,
-                block.number
-            )
-        );
+        permissionId =
+            keccak256(abi.encodePacked(msg.sender, agent, token, block.timestamp, block.number));
 
         // Revoke any existing permission from this user to this agent
         bytes32 existingId = userAgentPermission[msg.sender][agent];
@@ -204,7 +192,11 @@ contract PermissionRegistry is Ownable, ReentrancyGuard {
      * @param agent The agent address
      * @return The Permission struct (or empty if none)
      */
-    function getActivePermission(address user, address agent) external view returns (Permission memory) {
+    function getActivePermission(address user, address agent)
+        external
+        view
+        returns (Permission memory)
+    {
         bytes32 permissionId = userAgentPermission[user][agent];
         if (permissionId == bytes32(0)) {
             return Permission(address(0), address(0), address(0), 0, 0, 0, 0, false, bytes32(0));
@@ -278,12 +270,7 @@ contract PermissionRegistry is Ownable, ReentrancyGuard {
         perm.isActive = false;
         activePermissions--;
 
-        emit PermissionRevoked(
-            permissionId,
-            perm.user,
-            perm.agent,
-            block.timestamp
-        );
+        emit PermissionRevoked(permissionId, perm.user, perm.agent, block.timestamp);
     }
 
     // ============ Admin Functions ============
@@ -300,11 +287,7 @@ contract PermissionRegistry is Ownable, ReentrancyGuard {
                 perm.isActive = false;
                 activePermissions--;
 
-                emit PermissionExpired(
-                    permissionIds[i],
-                    perm.user,
-                    perm.agent
-                );
+                emit PermissionExpired(permissionIds[i], perm.user, perm.agent);
             }
         }
     }

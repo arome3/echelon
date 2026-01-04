@@ -41,16 +41,11 @@ contract PermissionRegistryTest is Test {
     );
 
     event PermissionRevoked(
-        bytes32 indexed permissionId,
-        address indexed user,
-        address indexed agent,
-        uint256 revokedAt
+        bytes32 indexed permissionId, address indexed user, address indexed agent, uint256 revokedAt
     );
 
     event PermissionExpired(
-        bytes32 indexed permissionId,
-        address indexed user,
-        address indexed agent
+        bytes32 indexed permissionId, address indexed user, address indexed agent
     );
 
     // ============ Setup ============
@@ -138,12 +133,7 @@ contract PermissionRegistryTest is Test {
         );
 
         registry.recordPermission(
-            agent1,
-            token,
-            AMOUNT_PER_PERIOD,
-            PERIOD_DURATION,
-            expiresAt,
-            permissionHash
+            agent1, token, AMOUNT_PER_PERIOD, PERIOD_DURATION, expiresAt, permissionHash
         );
     }
 
@@ -246,12 +236,7 @@ contract PermissionRegistryTest is Test {
         vm.prank(user1);
         vm.expectRevert(PermissionRegistry.InvalidAmount.selector);
         registry.recordPermission(
-            agent1,
-            token,
-            0,
-            PERIOD_DURATION,
-            block.timestamp + 30 days,
-            bytes32(0)
+            agent1, token, 0, PERIOD_DURATION, block.timestamp + 30 days, bytes32(0)
         );
     }
 
@@ -259,12 +244,7 @@ contract PermissionRegistryTest is Test {
         vm.prank(user1);
         vm.expectRevert(PermissionRegistry.InvalidDuration.selector);
         registry.recordPermission(
-            agent1,
-            token,
-            AMOUNT_PER_PERIOD,
-            0,
-            block.timestamp + 30 days,
-            bytes32(0)
+            agent1, token, AMOUNT_PER_PERIOD, 0, block.timestamp + 30 days, bytes32(0)
         );
     }
 
@@ -566,7 +546,8 @@ contract PermissionRegistryTest is Test {
     function testFuzz_RecordPermission_ValidExpiry(uint256 daysUntilExpiry) public {
         vm.assume(daysUntilExpiry > 0 && daysUntilExpiry < 3650); // Up to 10 years
 
-        bytes32 permissionId = _recordPermission(user1, agent1, AMOUNT_PER_PERIOD, PERIOD_DURATION, daysUntilExpiry);
+        bytes32 permissionId =
+            _recordPermission(user1, agent1, AMOUNT_PER_PERIOD, PERIOD_DURATION, daysUntilExpiry);
 
         PermissionRegistry.Permission memory perm = registry.getPermission(permissionId);
         assertEq(perm.expiresAt, block.timestamp + daysUntilExpiry * 1 days);

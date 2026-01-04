@@ -12,12 +12,12 @@ contract AgentExecutionTest is Test, IERC721Receiver {
     AgentExecution public execution;
 
     /// @notice ERC721 receiver callback to accept NFT mints
-    function onERC721Received(
-        address,
-        address,
-        uint256,
-        bytes calldata
-    ) external pure override returns (bytes4) {
+    function onERC721Received(address, address, uint256, bytes calldata)
+        external
+        pure
+        override
+        returns (bytes4)
+    {
         return IERC721Receiver.onERC721Received.selector;
     }
 
@@ -36,21 +36,10 @@ contract AgentExecutionTest is Test, IERC721Receiver {
         execution = new AgentExecution(address(registry));
 
         // Register agents
-        agentId1 = registry.registerAgent(
-            agentWallet1,
-            "Test Agent 1",
-            "DCA",
-            5,
-            "ipfs://test1"
-        );
+        agentId1 = registry.registerAgent(agentWallet1, "Test Agent 1", "DCA", 5, "ipfs://test1");
 
-        agentId2 = registry.registerAgent(
-            agentWallet2,
-            "Test Agent 2",
-            "Arbitrage",
-            7,
-            "ipfs://test2"
-        );
+        agentId2 =
+            registry.registerAgent(agentWallet2, "Test Agent 2", "Arbitrage", 7, "ipfs://test2");
     }
 
     // ============ Execution Start Tests ============
@@ -100,11 +89,7 @@ contract AgentExecutionTest is Test, IERC721Receiver {
         uint256 executionId = execution.logExecutionStart(user1, 1000, tokenIn, tokenOut);
 
         execution.logExecutionComplete(
-            executionId,
-            user1,
-            1000,
-            1100,
-            IAgentExecution.ExecutionResult.SUCCESS
+            executionId, user1, 1000, 1100, IAgentExecution.ExecutionResult.SUCCESS
         );
 
         vm.stopPrank();
@@ -118,11 +103,7 @@ contract AgentExecutionTest is Test, IERC721Receiver {
         uint256 executionId = execution.logExecutionStart(user1, 1000, tokenIn, tokenOut);
 
         execution.logExecutionComplete(
-            executionId,
-            user1,
-            1000,
-            900,
-            IAgentExecution.ExecutionResult.FAILURE
+            executionId, user1, 1000, 900, IAgentExecution.ExecutionResult.FAILURE
         );
 
         vm.stopPrank();
@@ -147,11 +128,7 @@ contract AgentExecutionTest is Test, IERC721Receiver {
         );
 
         execution.logExecutionComplete(
-            executionId,
-            user1,
-            1000,
-            1100,
-            IAgentExecution.ExecutionResult.SUCCESS
+            executionId, user1, 1000, 1100, IAgentExecution.ExecutionResult.SUCCESS
         );
 
         vm.stopPrank();
@@ -164,11 +141,7 @@ contract AgentExecutionTest is Test, IERC721Receiver {
         vm.prank(agentWallet2);
         vm.expectRevert("Not execution owner");
         execution.logExecutionComplete(
-            executionId,
-            user1,
-            1000,
-            1100,
-            IAgentExecution.ExecutionResult.SUCCESS
+            executionId, user1, 1000, 1100, IAgentExecution.ExecutionResult.SUCCESS
         );
     }
 
@@ -179,21 +152,13 @@ contract AgentExecutionTest is Test, IERC721Receiver {
 
         // Complete once
         execution.logExecutionComplete(
-            executionId,
-            user1,
-            1000,
-            1100,
-            IAgentExecution.ExecutionResult.SUCCESS
+            executionId, user1, 1000, 1100, IAgentExecution.ExecutionResult.SUCCESS
         );
 
         // Try to complete again
         vm.expectRevert("Execution not pending");
         execution.logExecutionComplete(
-            executionId,
-            user1,
-            1000,
-            1100,
-            IAgentExecution.ExecutionResult.SUCCESS
+            executionId, user1, 1000, 1100, IAgentExecution.ExecutionResult.SUCCESS
         );
 
         vm.stopPrank();

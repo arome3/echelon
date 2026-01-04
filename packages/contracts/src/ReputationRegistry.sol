@@ -112,15 +112,17 @@ contract ReputationRegistry is IERC8004Reputation {
         }
 
         // Store feedback
-        _feedbacks[agentId][msg.sender].push(Feedback({
-            score: score,
-            tag1: tag1,
-            tag2: tag2,
-            fileuri: fileuri,
-            filehash: filehash,
-            isRevoked: false,
-            timestamp: block.timestamp
-        }));
+        _feedbacks[agentId][msg.sender].push(
+            Feedback({
+                score: score,
+                tag1: tag1,
+                tag2: tag2,
+                fileuri: fileuri,
+                filehash: filehash,
+                isRevoked: false,
+                timestamp: block.timestamp
+            })
+        );
 
         emit NewFeedback(agentId, msg.sender, score, tag1, tag2, fileuri, filehash);
     }
@@ -144,18 +146,17 @@ contract ReputationRegistry is IERC8004Reputation {
         bytes32 responseHash
     ) external {
         // Verify caller is the agent owner or approved operator
-        require(
-            _isAgentOwnerOrApproved(agentId, msg.sender),
-            "Only agent owner can respond"
-        );
+        require(_isAgentOwnerOrApproved(agentId, msg.sender), "Only agent owner can respond");
         require(feedbackIndex < _feedbacks[agentId][clientAddress].length, "Invalid feedback index");
 
-        _responses[agentId][clientAddress][feedbackIndex].push(Response({
-            responder: msg.sender,
-            responseUri: responseUri,
-            responseHash: responseHash,
-            timestamp: block.timestamp
-        }));
+        _responses[agentId][clientAddress][feedbackIndex].push(
+            Response({
+                responder: msg.sender,
+                responseUri: responseUri,
+                responseHash: responseHash,
+                timestamp: block.timestamp
+            })
+        );
 
         emit ResponseAppended(agentId, clientAddress, feedbackIndex, msg.sender, responseUri);
     }
@@ -173,14 +174,11 @@ contract ReputationRegistry is IERC8004Reputation {
         uint64 validCount = 0;
 
         // Use provided clients or get all clients for this agent
-        uint256 clientCount = clientAddresses.length > 0
-            ? clientAddresses.length
-            : _clients[agentId].length;
+        uint256 clientCount =
+            clientAddresses.length > 0 ? clientAddresses.length : _clients[agentId].length;
 
         for (uint256 i = 0; i < clientCount; i++) {
-            address client = clientAddresses.length > 0
-                ? clientAddresses[i]
-                : _clients[agentId][i];
+            address client = clientAddresses.length > 0 ? clientAddresses[i] : _clients[agentId][i];
 
             Feedback[] storage feedbacks = _feedbacks[agentId][client];
 
@@ -204,11 +202,11 @@ contract ReputationRegistry is IERC8004Reputation {
     }
 
     /// @inheritdoc IERC8004Reputation
-    function readFeedback(
-        uint256 agentId,
-        address clientAddress,
-        uint64 index
-    ) external view returns (uint8 score, bytes32 tag1, bytes32 tag2, bool isRevoked) {
+    function readFeedback(uint256 agentId, address clientAddress, uint64 index)
+        external
+        view
+        returns (uint8 score, bytes32 tag1, bytes32 tag2, bool isRevoked)
+    {
         require(index < _feedbacks[agentId][clientAddress].length, "Invalid index");
 
         Feedback storage fb = _feedbacks[agentId][clientAddress][index];
@@ -234,16 +232,13 @@ contract ReputationRegistry is IERC8004Reputation {
         )
     {
         // Determine client count
-        uint256 clientCount = clientAddresses.length > 0
-            ? clientAddresses.length
-            : _clients[agentId].length;
+        uint256 clientCount =
+            clientAddresses.length > 0 ? clientAddresses.length : _clients[agentId].length;
 
         // First pass: count matching feedback
         uint256 totalCount = 0;
         for (uint256 i = 0; i < clientCount; i++) {
-            address client = clientAddresses.length > 0
-                ? clientAddresses[i]
-                : _clients[agentId][i];
+            address client = clientAddresses.length > 0 ? clientAddresses[i] : _clients[agentId][i];
 
             Feedback[] storage feedbacks = _feedbacks[agentId][client];
             for (uint256 j = 0; j < feedbacks.length; j++) {
@@ -263,9 +258,7 @@ contract ReputationRegistry is IERC8004Reputation {
         // Second pass: populate arrays
         uint256 index = 0;
         for (uint256 i = 0; i < clientCount; i++) {
-            address client = clientAddresses.length > 0
-                ? clientAddresses[i]
-                : _clients[agentId][i];
+            address client = clientAddresses.length > 0 ? clientAddresses[i] : _clients[agentId][i];
 
             Feedback[] storage feedbacks = _feedbacks[agentId][client];
             for (uint256 j = 0; j < feedbacks.length; j++) {
@@ -311,10 +304,11 @@ contract ReputationRegistry is IERC8004Reputation {
     }
 
     /// @inheritdoc IERC8004Reputation
-    function getLastIndex(
-        uint256 agentId,
-        address clientAddress
-    ) external view returns (uint64 index) {
+    function getLastIndex(uint256 agentId, address clientAddress)
+        external
+        view
+        returns (uint64 index)
+    {
         uint256 length = _feedbacks[agentId][clientAddress].length;
         return length > 0 ? uint64(length - 1) : 0;
     }
@@ -332,11 +326,7 @@ contract ReputationRegistry is IERC8004Reputation {
      * @return isRevoked Revocation status
      * @return timestamp When feedback was submitted
      */
-    function getDetailedFeedback(
-        uint256 agentId,
-        address clientAddress,
-        uint64 index
-    )
+    function getDetailedFeedback(uint256 agentId, address clientAddress, uint64 index)
         external
         view
         returns (
@@ -361,10 +351,11 @@ contract ReputationRegistry is IERC8004Reputation {
      * @param clientAddress The client address
      * @return count Number of feedback entries
      */
-    function getFeedbackCount(
-        uint256 agentId,
-        address clientAddress
-    ) external view returns (uint256 count) {
+    function getFeedbackCount(uint256 agentId, address clientAddress)
+        external
+        view
+        returns (uint256 count)
+    {
         return _feedbacks[agentId][clientAddress].length;
     }
 
@@ -389,18 +380,22 @@ contract ReputationRegistry is IERC8004Reputation {
      * @param account The address to verify
      * @return True if the account is owner or approved
      */
-    function _isAgentOwnerOrApproved(uint256 agentId, address account) internal view returns (bool) {
+    function _isAgentOwnerOrApproved(uint256 agentId, address account)
+        internal
+        view
+        returns (bool)
+    {
         IERC721 registry = IERC721(identityRegistry);
         try registry.ownerOf(agentId) returns (address owner) {
             if (account == owner) return true;
             // Check if approved for this specific token
             try registry.getApproved(agentId) returns (address approved) {
                 if (account == approved) return true;
-            } catch {}
+            } catch { }
             // Check if approved for all tokens
             try registry.isApprovedForAll(owner, account) returns (bool isApproved) {
                 return isApproved;
-            } catch {}
+            } catch { }
             return false;
         } catch {
             return false;
@@ -438,15 +433,17 @@ contract ReputationRegistry is IERC8004Reputation {
         require(block.timestamp <= expiry, "Signature expired");
 
         // Build message hash
-        bytes32 structHash = keccak256(abi.encode(
-            FEEDBACK_TYPEHASH,
-            agentId,
-            clientAddress,
-            nonces[clientAddress],
-            expiry,
-            block.chainid,
-            identityRegistry
-        ));
+        bytes32 structHash = keccak256(
+            abi.encode(
+                FEEDBACK_TYPEHASH,
+                agentId,
+                clientAddress,
+                nonces[clientAddress],
+                expiry,
+                block.chainid,
+                identityRegistry
+            )
+        );
 
         bytes32 digest = structHash.toEthSignedMessageHash();
 
@@ -455,10 +452,7 @@ contract ReputationRegistry is IERC8004Reputation {
 
         // Signer must be the client or the agent owner
         address agentOwner = IERC721(identityRegistry).ownerOf(agentId);
-        require(
-            signer == clientAddress || signer == agentOwner,
-            "Invalid signature"
-        );
+        require(signer == clientAddress || signer == agentOwner, "Invalid signature");
 
         // Increment nonce to prevent replay
         nonces[clientAddress]++;

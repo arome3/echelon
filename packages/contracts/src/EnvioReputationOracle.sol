@@ -52,7 +52,7 @@ contract EnvioReputationOracle is IEnvioReputationOracle, Ownable {
     /**
      * @notice Initialize the oracle with the deployer as owner
      */
-    constructor() Ownable(msg.sender) {}
+    constructor() Ownable(msg.sender) { }
 
     // ============ Modifiers ============
 
@@ -105,10 +105,10 @@ contract EnvioReputationOracle is IEnvioReputationOracle, Ownable {
      * @param agents Array of agent wallet addresses
      * @param scores Array of corresponding reputation scores (0-100)
      */
-    function batchUpdateReputation(
-        address[] calldata agents,
-        uint8[] calldata scores
-    ) external onlyEnvioUpdater {
+    function batchUpdateReputation(address[] calldata agents, uint8[] calldata scores)
+        external
+        onlyEnvioUpdater
+    {
         if (agents.length != scores.length) {
             revert ArrayLengthMismatch(agents.length, scores.length);
         }
@@ -135,7 +135,11 @@ contract EnvioReputationOracle is IEnvioReputationOracle, Ownable {
      * @return score The reputation score (0-100). Returns DEFAULT_NEUTRAL_SCORE if never updated.
      * @return lastUpdated Timestamp of the last update. Returns 0 if never updated.
      */
-    function getAgentReputation(address agent) external view returns (uint8 score, uint256 lastUpdated) {
+    function getAgentReputation(address agent)
+        external
+        view
+        returns (uint8 score, uint256 lastUpdated)
+    {
         lastUpdated = _lastUpdated[agent];
 
         if (lastUpdated == 0) {

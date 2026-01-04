@@ -32,11 +32,11 @@ contract SimulateMomentumMaster is Script {
         // Complete the remaining 5 trades for MomentumMaster
         // Original had 10 trades, 5 already completed
         // Remaining: trades 6-10 (3 wins, 2 losses to maintain 70% overall)
-        _simulateTrade(execution, DEMO_USER, 800e6, 700e6, false);   // -12.5%
-        _simulateTrade(execution, DEMO_USER, 800e6, 900e6, true);    // +12.5%
-        _simulateTrade(execution, DEMO_USER, 800e6, 680e6, false);   // -15%
-        _simulateTrade(execution, DEMO_USER, 800e6, 1000e6, true);   // +25%
-        _simulateTrade(execution, DEMO_USER, 800e6, 870e6, true);    // +8.75%
+        _simulateTrade(execution, DEMO_USER, 800e6, 700e6, false); // -12.5%
+        _simulateTrade(execution, DEMO_USER, 800e6, 900e6, true); // +12.5%
+        _simulateTrade(execution, DEMO_USER, 800e6, 680e6, false); // -15%
+        _simulateTrade(execution, DEMO_USER, 800e6, 1000e6, true); // +25%
+        _simulateTrade(execution, DEMO_USER, 800e6, 870e6, true); // +8.75%
 
         vm.stopBroadcast();
 
@@ -59,7 +59,9 @@ contract SimulateMomentumMaster is Script {
             user,
             amountIn,
             amountOut,
-            success ? IAgentExecution.ExecutionResult.SUCCESS : IAgentExecution.ExecutionResult.FAILURE
+            success
+                ? IAgentExecution.ExecutionResult.SUCCESS
+                : IAgentExecution.ExecutionResult.FAILURE
         );
     }
 }

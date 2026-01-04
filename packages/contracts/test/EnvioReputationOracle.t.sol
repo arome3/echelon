@@ -85,7 +85,7 @@ contract EnvioReputationOracleTest is Test {
         // Owner should also be able to update
         oracle.updateReputation(agent1, 65);
 
-        (uint8 score, ) = oracle.getAgentReputation(agent1);
+        (uint8 score,) = oracle.getAgentReputation(agent1);
         assertEq(score, 65);
     }
 
@@ -107,7 +107,7 @@ contract EnvioReputationOracleTest is Test {
         vm.prank(updater);
         oracle.updateReputation(agent1, 0);
 
-        (uint8 score, ) = oracle.getAgentReputation(agent1);
+        (uint8 score,) = oracle.getAgentReputation(agent1);
         assertEq(score, 0);
     }
 
@@ -115,7 +115,7 @@ contract EnvioReputationOracleTest is Test {
         vm.prank(updater);
         oracle.updateReputation(agent1, 100);
 
-        (uint8 score, ) = oracle.getAgentReputation(agent1);
+        (uint8 score,) = oracle.getAgentReputation(agent1);
         assertEq(score, 100);
     }
 
@@ -125,7 +125,7 @@ contract EnvioReputationOracleTest is Test {
         oracle.updateReputation(agent1, 75);
         vm.stopPrank();
 
-        (uint8 score, ) = oracle.getAgentReputation(agent1);
+        (uint8 score,) = oracle.getAgentReputation(agent1);
         assertEq(score, 75);
     }
 
@@ -145,9 +145,9 @@ contract EnvioReputationOracleTest is Test {
         vm.prank(updater);
         oracle.batchUpdateReputation(agents, scores);
 
-        (uint8 score1, ) = oracle.getAgentReputation(agent1);
-        (uint8 score2, ) = oracle.getAgentReputation(agent2);
-        (uint8 score3, ) = oracle.getAgentReputation(agent3);
+        (uint8 score1,) = oracle.getAgentReputation(agent1);
+        (uint8 score2,) = oracle.getAgentReputation(agent2);
+        (uint8 score3,) = oracle.getAgentReputation(agent3);
 
         assertEq(score1, 60);
         assertEq(score2, 70);
@@ -270,7 +270,7 @@ contract EnvioReputationOracleTest is Test {
         vm.prank(updater);
         oracle.updateReputation(agent1, score);
 
-        (uint8 storedScore, ) = oracle.getAgentReputation(agent1);
+        (uint8 storedScore,) = oracle.getAgentReputation(agent1);
         assertEq(storedScore, score);
     }
 
@@ -290,7 +290,7 @@ contract EnvioReputationOracleTest is Test {
 
         // Verify all were updated
         for (uint8 i = 0; i < numAgents; i++) {
-            (uint8 storedScore, ) = oracle.getAgentReputation(agents[i]);
+            (uint8 storedScore,) = oracle.getAgentReputation(agents[i]);
             assertEq(storedScore, scores[i]);
         }
     }

@@ -12,12 +12,12 @@ contract ValidationRegistryTest is Test, IERC721Receiver {
     ValidationRegistry public validationRegistry;
 
     /// @notice ERC721 receiver callback
-    function onERC721Received(
-        address,
-        address,
-        uint256,
-        bytes calldata
-    ) external pure override returns (bytes4) {
+    function onERC721Received(address, address, uint256, bytes calldata)
+        external
+        pure
+        override
+        returns (bytes4)
+    {
         return IERC721Receiver.onERC721Received.selector;
     }
 
@@ -38,13 +38,7 @@ contract ValidationRegistryTest is Test, IERC721Receiver {
         validationRegistry = new ValidationRegistry(address(agentRegistry));
 
         // Register an agent for testing
-        agentId = agentRegistry.registerAgent(
-            agentWallet,
-            "Test Agent",
-            "DCA",
-            5,
-            "ipfs://test"
-        );
+        agentId = agentRegistry.registerAgent(agentWallet, "Test Agent", "DCA", 5, "ipfs://test");
     }
 
     // ============ Request Tests ============
@@ -52,12 +46,7 @@ contract ValidationRegistryTest is Test, IERC721Receiver {
     function test_ValidationRequest() public {
         bytes32 requestHash = keccak256("request1");
 
-        validationRegistry.validationRequest(
-            validator1,
-            agentId,
-            "ipfs://request",
-            requestHash
-        );
+        validationRegistry.validationRequest(validator1, agentId, "ipfs://request", requestHash);
 
         // Verify request was created
         assertTrue(validationRegistry.requestExists(requestHash));
@@ -82,18 +71,10 @@ contract ValidationRegistryTest is Test, IERC721Receiver {
 
         vm.expectEmit(true, true, false, true);
         emit IERC8004Validation.ValidationRequest(
-            validator1,
-            agentId,
-            "ipfs://request",
-            requestHash
+            validator1, agentId, "ipfs://request", requestHash
         );
 
-        validationRegistry.validationRequest(
-            validator1,
-            agentId,
-            "ipfs://request",
-            requestHash
-        );
+        validationRegistry.validationRequest(validator1, agentId, "ipfs://request", requestHash);
     }
 
     function test_RevertWhen_ValidationRequest_NotOwner() public {
@@ -101,32 +82,17 @@ contract ValidationRegistryTest is Test, IERC721Receiver {
 
         vm.prank(user1); // Not the agent owner
         vm.expectRevert("Not agent owner or operator");
-        validationRegistry.validationRequest(
-            validator1,
-            agentId,
-            "ipfs://request",
-            requestHash
-        );
+        validationRegistry.validationRequest(validator1, agentId, "ipfs://request", requestHash);
     }
 
     function test_RevertWhen_ValidationRequest_DuplicateHash() public {
         bytes32 requestHash = keccak256("request1");
 
-        validationRegistry.validationRequest(
-            validator1,
-            agentId,
-            "ipfs://request",
-            requestHash
-        );
+        validationRegistry.validationRequest(validator1, agentId, "ipfs://request", requestHash);
 
         // Try to create another request with same hash
         vm.expectRevert("Request hash already exists");
-        validationRegistry.validationRequest(
-            validator2,
-            agentId,
-            "ipfs://request2",
-            requestHash
-        );
+        validationRegistry.validationRequest(validator2, agentId, "ipfs://request2", requestHash);
     }
 
     function test_RevertWhen_ValidationRequest_InvalidAgent() public {
@@ -159,30 +125,17 @@ contract ValidationRegistryTest is Test, IERC721Receiver {
         bytes32 requestHash = keccak256("request1");
 
         // Create request
-        validationRegistry.validationRequest(
-            validator1,
-            agentId,
-            "ipfs://request",
-            requestHash
-        );
+        validationRegistry.validationRequest(validator1, agentId, "ipfs://request", requestHash);
 
         // Validator responds
         vm.prank(validator1);
         validationRegistry.validationResponse(
-            requestHash,
-            85,
-            "ipfs://response",
-            bytes32(uint256(123)),
-            TAG_EXECUTION
+            requestHash, 85, "ipfs://response", bytes32(uint256(123)), TAG_EXECUTION
         );
 
         // Verify response
-        (
-            address validatorAddress,
-            uint256 storedAgentId,
-            uint8 response,
-            bytes32 tag,
-        ) = validationRegistry.getValidationStatus(requestHash);
+        (address validatorAddress, uint256 storedAgentId, uint8 response, bytes32 tag,) =
+            validationRegistry.getValidationStatus(requestHash);
 
         assertEq(validatorAddress, validator1);
         assertEq(storedAgentId, agentId);
@@ -193,52 +146,29 @@ contract ValidationRegistryTest is Test, IERC721Receiver {
     function test_ValidationResponse_EmitsEvent() public {
         bytes32 requestHash = keccak256("request1");
 
-        validationRegistry.validationRequest(
-            validator1,
-            agentId,
-            "ipfs://request",
-            requestHash
-        );
+        validationRegistry.validationRequest(validator1, agentId, "ipfs://request", requestHash);
 
         vm.prank(validator1);
         vm.expectEmit(true, true, true, true);
         emit IERC8004Validation.ValidationResponse(
-            validator1,
-            agentId,
-            requestHash,
-            85,
-            "ipfs://response",
-            TAG_EXECUTION
+            validator1, agentId, requestHash, 85, "ipfs://response", TAG_EXECUTION
         );
 
         validationRegistry.validationResponse(
-            requestHash,
-            85,
-            "ipfs://response",
-            bytes32(uint256(123)),
-            TAG_EXECUTION
+            requestHash, 85, "ipfs://response", bytes32(uint256(123)), TAG_EXECUTION
         );
     }
 
     function test_RevertWhen_ValidationResponse_NotValidator() public {
         bytes32 requestHash = keccak256("request1");
 
-        validationRegistry.validationRequest(
-            validator1,
-            agentId,
-            "ipfs://request",
-            requestHash
-        );
+        validationRegistry.validationRequest(validator1, agentId, "ipfs://request", requestHash);
 
         // Wrong validator tries to respond
         vm.prank(validator2);
         vm.expectRevert("Not assigned validator");
         validationRegistry.validationResponse(
-            requestHash,
-            85,
-            "ipfs://response",
-            bytes32(uint256(123)),
-            TAG_EXECUTION
+            requestHash, 85, "ipfs://response", bytes32(uint256(123)), TAG_EXECUTION
         );
     }
 
@@ -257,12 +187,7 @@ contract ValidationRegistryTest is Test, IERC721Receiver {
     function test_RevertWhen_ValidationResponse_ResponseTooHigh() public {
         bytes32 requestHash = keccak256("request1");
 
-        validationRegistry.validationRequest(
-            validator1,
-            agentId,
-            "ipfs://request",
-            requestHash
-        );
+        validationRegistry.validationRequest(validator1, agentId, "ipfs://request", requestHash);
 
         vm.prank(validator1);
         vm.expectRevert("Response exceeds maximum");
@@ -294,11 +219,8 @@ contract ValidationRegistryTest is Test, IERC721Receiver {
 
         // Get summary
         address[] memory empty = new address[](0);
-        (uint64 count, uint8 avgResponse) = validationRegistry.getSummary(
-            agentId,
-            empty,
-            bytes32(0)
-        );
+        (uint64 count, uint8 avgResponse) =
+            validationRegistry.getSummary(agentId, empty, bytes32(0));
 
         assertEq(count, 2);
         assertEq(avgResponse, 90); // (80 + 100) / 2
@@ -321,11 +243,8 @@ contract ValidationRegistryTest is Test, IERC721Receiver {
         address[] memory validators = new address[](1);
         validators[0] = validator1;
 
-        (uint64 count, uint8 avgResponse) = validationRegistry.getSummary(
-            agentId,
-            validators,
-            bytes32(0)
-        );
+        (uint64 count, uint8 avgResponse) =
+            validationRegistry.getSummary(agentId, validators, bytes32(0));
 
         assertEq(count, 1);
         assertEq(avgResponse, 80);
@@ -345,11 +264,8 @@ contract ValidationRegistryTest is Test, IERC721Receiver {
 
         // Filter by EXECUTION tag
         address[] memory empty = new address[](0);
-        (uint64 count, uint8 avgResponse) = validationRegistry.getSummary(
-            agentId,
-            empty,
-            TAG_EXECUTION
-        );
+        (uint64 count, uint8 avgResponse) =
+            validationRegistry.getSummary(agentId, empty, TAG_EXECUTION);
 
         assertEq(count, 1);
         assertEq(avgResponse, 80);
@@ -368,11 +284,8 @@ contract ValidationRegistryTest is Test, IERC721Receiver {
 
         // Summary should only count responded validation
         address[] memory empty = new address[](0);
-        (uint64 count, uint8 avgResponse) = validationRegistry.getSummary(
-            agentId,
-            empty,
-            bytes32(0)
-        );
+        (uint64 count, uint8 avgResponse) =
+            validationRegistry.getSummary(agentId, empty, bytes32(0));
 
         assertEq(count, 1);
         assertEq(avgResponse, 80);
@@ -428,20 +341,11 @@ contract ValidationRegistryTest is Test, IERC721Receiver {
     function test_GetValidationDetails() public {
         bytes32 requestHash = keccak256("request1");
 
-        validationRegistry.validationRequest(
-            validator1,
-            agentId,
-            "ipfs://request",
-            requestHash
-        );
+        validationRegistry.validationRequest(validator1, agentId, "ipfs://request", requestHash);
 
         vm.prank(validator1);
         validationRegistry.validationResponse(
-            requestHash,
-            85,
-            "ipfs://response",
-            bytes32(uint256(456)),
-            TAG_EXECUTION
+            requestHash, 85, "ipfs://response", bytes32(uint256(456)), TAG_EXECUTION
         );
 
         (
@@ -481,12 +385,7 @@ contract ValidationRegistryTest is Test, IERC721Receiver {
 
         // Operator can create validation request
         vm.prank(user1);
-        validationRegistry.validationRequest(
-            validator1,
-            agentId,
-            "ipfs://request",
-            requestHash
-        );
+        validationRegistry.validationRequest(validator1, agentId, "ipfs://request", requestHash);
 
         assertTrue(validationRegistry.requestExists(requestHash));
     }
@@ -498,21 +397,10 @@ contract ValidationRegistryTest is Test, IERC721Receiver {
 
         bytes32 requestHash = keccak256(abi.encodePacked("request", response));
 
-        validationRegistry.validationRequest(
-            validator1,
-            agentId,
-            "ipfs://request",
-            requestHash
-        );
+        validationRegistry.validationRequest(validator1, agentId, "ipfs://request", requestHash);
 
         vm.prank(validator1);
-        validationRegistry.validationResponse(
-            requestHash,
-            response,
-            "",
-            bytes32(0),
-            bytes32(0)
-        );
+        validationRegistry.validationResponse(requestHash, response, "", bytes32(0), bytes32(0));
 
         (,, uint8 storedResponse,,) = validationRegistry.getValidationStatus(requestHash);
         assertEq(storedResponse, response);
@@ -521,12 +409,7 @@ contract ValidationRegistryTest is Test, IERC721Receiver {
     function testFuzz_ValidationRequest_AnyRequestHash(bytes32 requestHash) public {
         vm.assume(requestHash != bytes32(0));
 
-        validationRegistry.validationRequest(
-            validator1,
-            agentId,
-            "ipfs://request",
-            requestHash
-        );
+        validationRegistry.validationRequest(validator1, agentId, "ipfs://request", requestHash);
 
         assertTrue(validationRegistry.requestExists(requestHash));
     }

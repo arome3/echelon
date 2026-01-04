@@ -11,7 +11,8 @@ import "./interfaces/IAgentRegistry.sol";
  * @title AgentRegistry
  * @author Echelon Team
  * @notice ERC-8004 compliant Identity Registry for AI trading agents
- * @dev Implements IAgentRegistry (which extends IERC8004Identity) with ERC-721 NFT ownership and key-value metadata storage
+ * @dev Implements IAgentRegistry (which extends IERC8004Identity) with ERC-721 NFT ownership and
+ * key-value metadata storage
  */
 contract AgentRegistry is
     IAgentRegistry,
@@ -81,10 +82,11 @@ contract AgentRegistry is
     // ============ ERC-8004 Identity Functions ============
 
     /// @inheritdoc IERC8004Identity
-    function register(
-        string calldata tokenURI_,
-        MetadataEntry[] calldata metadata
-    ) external nonReentrant returns (uint256 agentId) {
+    function register(string calldata tokenURI_, MetadataEntry[] calldata metadata)
+        external
+        nonReentrant
+        returns (uint256 agentId)
+    {
         agentId = _registerAgent(tokenURI_);
 
         // Set all provided metadata entries
@@ -104,20 +106,17 @@ contract AgentRegistry is
     }
 
     /// @inheritdoc IERC8004Identity
-    function getMetadata(
-        uint256 agentId,
-        string calldata key
-    ) external view returns (bytes memory value) {
+    function getMetadata(uint256 agentId, string calldata key)
+        external
+        view
+        returns (bytes memory value)
+    {
         require(_ownerOf(agentId) != address(0), "Agent does not exist");
         return _metadata[agentId][key];
     }
 
     /// @inheritdoc IERC8004Identity
-    function setMetadata(
-        uint256 agentId,
-        string calldata key,
-        bytes calldata value
-    ) external {
+    function setMetadata(uint256 agentId, string calldata key, bytes calldata value) external {
         require(_ownerOf(agentId) == msg.sender, "Not agent owner");
         _setMetadataInternal(agentId, key, value);
     }
@@ -253,10 +252,11 @@ contract AgentRegistry is
      * @param limit Number of agents to return
      * @return agentIds Array of active agent IDs
      */
-    function getActiveAgents(
-        uint256 offset,
-        uint256 limit
-    ) external view returns (uint256[] memory agentIds) {
+    function getActiveAgents(uint256 offset, uint256 limit)
+        external
+        view
+        returns (uint256[] memory agentIds)
+    {
         uint256 total = totalSupply();
         uint256 count = 0;
 
@@ -381,10 +381,11 @@ contract AgentRegistry is
      * @param limit Number of agents to return
      * @return agentIds Array of verified agent IDs
      */
-    function getVerifiedAgents(
-        uint256 offset,
-        uint256 limit
-    ) external view returns (uint256[] memory agentIds) {
+    function getVerifiedAgents(uint256 offset, uint256 limit)
+        external
+        view
+        returns (uint256[] memory agentIds)
+    {
         uint256 total = totalSupply();
         uint256 count = 0;
 
@@ -455,7 +456,11 @@ contract AgentRegistry is
      * @param agentId The agent's ID
      * @return metadata The decoded metadata struct
      */
-    function _decodeAgentMetadata(uint256 agentId) internal view returns (AgentMetadata memory metadata) {
+    function _decodeAgentMetadata(uint256 agentId)
+        internal
+        view
+        returns (AgentMetadata memory metadata)
+    {
         bytes memory walletData = _metadata[agentId][KEY_WALLET_ADDRESS];
         bytes memory nameData = _metadata[agentId][KEY_NAME];
         bytes memory strategyData = _metadata[agentId][KEY_STRATEGY_TYPE];
@@ -463,11 +468,13 @@ contract AgentRegistry is
         bytes memory registeredData = _metadata[agentId][KEY_REGISTERED_AT];
         bytes memory activeData = _metadata[agentId][KEY_IS_ACTIVE];
 
-        metadata.walletAddress = walletData.length > 0 ? abi.decode(walletData, (address)) : address(0);
+        metadata.walletAddress =
+            walletData.length > 0 ? abi.decode(walletData, (address)) : address(0);
         metadata.name = nameData.length > 0 ? abi.decode(nameData, (string)) : "";
         metadata.strategyType = strategyData.length > 0 ? abi.decode(strategyData, (string)) : "";
         metadata.riskLevel = riskData.length > 0 ? abi.decode(riskData, (uint8)) : 0;
-        metadata.registeredAt = registeredData.length > 0 ? abi.decode(registeredData, (uint256)) : 0;
+        metadata.registeredAt =
+            registeredData.length > 0 ? abi.decode(registeredData, (uint256)) : 0;
         metadata.isActive = activeData.length > 0 ? abi.decode(activeData, (bool)) : false;
     }
 
@@ -484,30 +491,36 @@ contract AgentRegistry is
 
     // ============ Override Functions ============
 
-    function _update(
-        address to,
-        uint256 tokenId,
-        address auth
-    ) internal override(ERC721, ERC721Enumerable) returns (address) {
+    function _update(address to, uint256 tokenId, address auth)
+        internal
+        override(ERC721, ERC721Enumerable)
+        returns (address)
+    {
         return super._update(to, tokenId, auth);
     }
 
-    function _increaseBalance(
-        address account,
-        uint128 value
-    ) internal override(ERC721, ERC721Enumerable) {
+    function _increaseBalance(address account, uint128 value)
+        internal
+        override(ERC721, ERC721Enumerable)
+    {
         super._increaseBalance(account, value);
     }
 
-    function tokenURI(
-        uint256 tokenId
-    ) public view override(ERC721, ERC721URIStorage) returns (string memory) {
+    function tokenURI(uint256 tokenId)
+        public
+        view
+        override(ERC721, ERC721URIStorage)
+        returns (string memory)
+    {
         return super.tokenURI(tokenId);
     }
 
-    function supportsInterface(
-        bytes4 interfaceId
-    ) public view override(ERC721URIStorage, ERC721Enumerable) returns (bool) {
+    function supportsInterface(bytes4 interfaceId)
+        public
+        view
+        override(ERC721URIStorage, ERC721Enumerable)
+        returns (bool)
+    {
         return super.supportsInterface(interfaceId);
     }
 }

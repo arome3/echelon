@@ -36,12 +36,7 @@ interface IERC8004Identity {
      * @param key The human-readable metadata key
      * @param value The ABI-encoded metadata value
      */
-    event MetadataSet(
-        uint256 indexed agentId,
-        bytes32 indexed indexedKey,
-        string key,
-        bytes value
-    );
+    event MetadataSet(uint256 indexed agentId, bytes32 indexed indexedKey, string key, bytes value);
 
     // ============ Registration Functions ============
 
@@ -51,10 +46,9 @@ interface IERC8004Identity {
      * @param metadata Array of key-value metadata entries to set during registration
      * @return agentId The unique identifier assigned to the new agent
      */
-    function register(
-        string calldata tokenURI,
-        MetadataEntry[] calldata metadata
-    ) external returns (uint256 agentId);
+    function register(string calldata tokenURI, MetadataEntry[] calldata metadata)
+        external
+        returns (uint256 agentId);
 
     /**
      * @notice Register a new agent with only a token URI
@@ -77,10 +71,10 @@ interface IERC8004Identity {
      * @param key The metadata key to retrieve
      * @return value The ABI-encoded metadata value (empty bytes if not set)
      */
-    function getMetadata(
-        uint256 agentId,
-        string calldata key
-    ) external view returns (bytes memory value);
+    function getMetadata(uint256 agentId, string calldata key)
+        external
+        view
+        returns (bytes memory value);
 
     /**
      * @notice Set a metadata value for an agent
@@ -89,9 +83,5 @@ interface IERC8004Identity {
      * @param key The metadata key to set
      * @param value The ABI-encoded metadata value
      */
-    function setMetadata(
-        uint256 agentId,
-        string calldata key,
-        bytes calldata value
-    ) external;
+    function setMetadata(uint256 agentId, string calldata key, bytes calldata value) external;
 }

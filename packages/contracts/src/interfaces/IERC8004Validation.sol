@@ -92,9 +92,7 @@ interface IERC8004Validation {
      * @return tag The categorization tag
      * @return lastUpdate Timestamp of the last update
      */
-    function getValidationStatus(
-        bytes32 requestHash
-    )
+    function getValidationStatus(bytes32 requestHash)
         external
         view
         returns (
@@ -113,27 +111,28 @@ interface IERC8004Validation {
      * @return count Total number of validation responses
      * @return avgResponse Average response score
      */
-    function getSummary(
-        uint256 agentId,
-        address[] calldata validatorAddresses,
-        bytes32 tag
-    ) external view returns (uint64 count, uint8 avgResponse);
+    function getSummary(uint256 agentId, address[] calldata validatorAddresses, bytes32 tag)
+        external
+        view
+        returns (uint64 count, uint8 avgResponse);
 
     /**
      * @notice Get all validation request hashes for an agent
      * @param agentId The agent to query
      * @return requestHashes Array of validation request hashes
      */
-    function getAgentValidations(
-        uint256 agentId
-    ) external view returns (bytes32[] memory requestHashes);
+    function getAgentValidations(uint256 agentId)
+        external
+        view
+        returns (bytes32[] memory requestHashes);
 
     /**
      * @notice Get all validation requests assigned to a validator
      * @param validatorAddress The validator to query
      * @return requestHashes Array of validation request hashes
      */
-    function getValidatorRequests(
-        address validatorAddress
-    ) external view returns (bytes32[] memory requestHashes);
+    function getValidatorRequests(address validatorAddress)
+        external
+        view
+        returns (bytes32[] memory requestHashes);
 }

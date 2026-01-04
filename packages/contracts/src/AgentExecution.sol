@@ -65,11 +65,7 @@ contract AgentExecution is IAgentExecution, ReentrancyGuard, Ownable {
     );
 
     /// @notice Emitted when automatic feedback submission fails
-    event AutoFeedbackFailed(
-        uint256 indexed executionId,
-        uint256 indexed agentId,
-        string reason
-    );
+    event AutoFeedbackFailed(uint256 indexed executionId, uint256 indexed agentId, string reason);
 
     // ============ Constructor ============
 
@@ -97,8 +93,7 @@ contract AgentExecution is IAgentExecution, ReentrancyGuard, Ownable {
      */
     function setAutoFeedbackEnabled(bool enabled) external onlyOwner {
         require(
-            !enabled || address(reputationRegistry) != address(0),
-            "Reputation registry not set"
+            !enabled || address(reputationRegistry) != address(0), "Reputation registry not set"
         );
         autoFeedbackEnabled = enabled;
         emit AutoFeedbackToggled(enabled);
@@ -121,7 +116,7 @@ contract AgentExecution is IAgentExecution, ReentrancyGuard, Ownable {
         require(tokenOut != address(0), "Invalid output token");
 
         // Get agent ID
-        (uint256 agentId, ) = registry.getAgentByWallet(msg.sender);
+        (uint256 agentId,) = registry.getAgentByWallet(msg.sender);
 
         // Generate execution ID
         executionId = ++_executionCount;
@@ -149,7 +144,7 @@ contract AgentExecution is IAgentExecution, ReentrancyGuard, Ownable {
         require(result != ExecutionResult.PENDING, "Invalid result");
 
         // Get agent ID
-        (uint256 agentId, ) = registry.getAgentByWallet(msg.sender);
+        (uint256 agentId,) = registry.getAgentByWallet(msg.sender);
 
         // Calculate profit/loss
         int256 profitLoss = int256(amountOut) - int256(amountIn);
@@ -158,13 +153,7 @@ contract AgentExecution is IAgentExecution, ReentrancyGuard, Ownable {
         _pendingExecutions[executionId] = false;
 
         emit ExecutionCompleted(
-            executionId,
-            agentId,
-            userAddress,
-            amountIn,
-            amountOut,
-            profitLoss,
-            result
+            executionId, agentId, userAddress, amountIn, amountOut, profitLoss, result
         );
 
         // Submit automatic feedback if enabled
@@ -192,7 +181,7 @@ contract AgentExecution is IAgentExecution, ReentrancyGuard, Ownable {
         require(childAgent.isActive, "Child agent not active");
 
         // Get parent agent ID
-        (uint256 parentAgentId, ) = registry.getAgentByWallet(msg.sender);
+        (uint256 parentAgentId,) = registry.getAgentByWallet(msg.sender);
 
         // Ensure not self-delegation
         require(parentAgentId != childAgentId, "Cannot delegate to self");
@@ -224,11 +213,11 @@ contract AgentExecution is IAgentExecution, ReentrancyGuard, Ownable {
      * @param result Execution result
      * @return score Reputation score (0-100)
      */
-    function calculateScore(
-        uint256 amountIn,
-        uint256 amountOut,
-        ExecutionResult result
-    ) public pure returns (uint8 score) {
+    function calculateScore(uint256 amountIn, uint256 amountOut, ExecutionResult result)
+        public
+        pure
+        returns (uint8 score)
+    {
         if (result == ExecutionResult.FAILURE) {
             // Failed executions get lower scores based on loss percentage
             if (amountOut >= amountIn) {
@@ -281,13 +270,7 @@ contract AgentExecution is IAgentExecution, ReentrancyGuard, Ownable {
         // Note: This call is made FROM this contract, not FROM the user
         // The feedback will show as coming from this contract's address
         try reputationRegistry.giveFeedback(
-            agentId,
-            score,
-            TAG_EXECUTION,
-            tag2,
-            "",
-            bytes32(executionId),
-            ""
+            agentId, score, TAG_EXECUTION, tag2, "", bytes32(executionId), ""
         ) {
             emit AutoFeedbackSubmitted(executionId, agentId, userAddress, score);
         } catch Error(string memory reason) {

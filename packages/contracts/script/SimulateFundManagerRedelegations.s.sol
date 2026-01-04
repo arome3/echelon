@@ -8,7 +8,8 @@ import "../src/AgentExecution.sol";
 /**
  * @title SimulateFundManagerRedelegations
  * @notice Simulates the Fund Manager redelegating to specialist agents (A2A delegation)
- * @dev Run with: forge script script/SimulateFundManagerRedelegations.s.sol --rpc-url $SEPOLIA_RPC_URL --broadcast
+ * @dev Run with: forge script script/SimulateFundManagerRedelegations.s.sol --rpc-url
+ * $SEPOLIA_RPC_URL --broadcast
  *
  * This script demonstrates the Fund Manager's role as an orchestrator:
  * 1. Fund Manager receives delegations from users (User -> Fund Manager)
@@ -34,7 +35,7 @@ contract SimulateFundManagerRedelegations is Script {
     uint256 constant MOMENTUM_MASTER_ID = 5;
 
     // Total delegated amount (10,000 USDC with 6 decimals)
-    uint256 constant TOTAL_DELEGATED = 10000e6;
+    uint256 constant TOTAL_DELEGATED = 10_000e6;
 
     // Delegation duration (7 days in seconds)
     uint256 constant DELEGATION_DURATION = 7 days;
@@ -82,7 +83,9 @@ contract SimulateFundManagerRedelegations is Script {
         // ============================================
         uint256 momentumAmount = (TOTAL_DELEGATED * 15) / 100;
         console.log("Redelegating to MomentumMaster (Agent 5):", momentumAmount / 1e6, "USDC (15%)");
-        execution.logRedelegation(MOMENTUM_MASTER_ID, DEMO_USER, momentumAmount, DELEGATION_DURATION);
+        execution.logRedelegation(
+            MOMENTUM_MASTER_ID, DEMO_USER, momentumAmount, DELEGATION_DURATION
+        );
 
         vm.stopBroadcast();
 
@@ -92,8 +95,14 @@ contract SimulateFundManagerRedelegations is Script {
         console.log("ArbitrageKing:   ", arbAmount / 1e6, "USDC");
         console.log("DCAWizard:       ", dcaAmount / 1e6, "USDC");
         console.log("MomentumMaster:  ", momentumAmount / 1e6, "USDC");
-        console.log("Total:           ", (alphaAmount + arbAmount + dcaAmount + momentumAmount) / 1e6, "USDC");
+        console.log(
+            "Total:           ",
+            (alphaAmount + arbAmount + dcaAmount + momentumAmount) / 1e6,
+            "USDC"
+        );
         console.log("");
-        console.log("Redelegations complete! The Fund Manager has now allocated funds to specialist agents.");
+        console.log(
+            "Redelegations complete! The Fund Manager has now allocated funds to specialist agents."
+        );
     }
 }

@@ -12,12 +12,12 @@ contract ReputationRegistryTest is Test, IERC721Receiver {
     ReputationRegistry public reputationRegistry;
 
     /// @notice ERC721 receiver callback
-    function onERC721Received(
-        address,
-        address,
-        uint256,
-        bytes calldata
-    ) external pure override returns (bytes4) {
+    function onERC721Received(address, address, uint256, bytes calldata)
+        external
+        pure
+        override
+        returns (bytes4)
+    {
         return IERC721Receiver.onERC721Received.selector;
     }
 
@@ -38,35 +38,18 @@ contract ReputationRegistryTest is Test, IERC721Receiver {
         reputationRegistry = new ReputationRegistry(address(agentRegistry));
 
         // Register an agent for testing
-        agentId = agentRegistry.registerAgent(
-            agentWallet,
-            "Test Agent",
-            "DCA",
-            5,
-            "ipfs://test"
-        );
+        agentId = agentRegistry.registerAgent(agentWallet, "Test Agent", "DCA", 5, "ipfs://test");
     }
 
     // ============ Basic Feedback Tests ============
 
     function test_GiveFeedback() public {
         vm.prank(client1);
-        reputationRegistry.giveFeedback(
-            agentId,
-            85,
-            TAG_EXECUTION,
-            TAG_DCA,
-            "",
-            bytes32(0),
-            ""
-        );
+        reputationRegistry.giveFeedback(agentId, 85, TAG_EXECUTION, TAG_DCA, "", bytes32(0), "");
 
         // Verify feedback was stored
-        (uint8 score, bytes32 tag1, bytes32 tag2, bool isRevoked) = reputationRegistry.readFeedback(
-            agentId,
-            client1,
-            0
-        );
+        (uint8 score, bytes32 tag1, bytes32 tag2, bool isRevoked) =
+            reputationRegistry.readFeedback(agentId, client1, 0);
 
         assertEq(score, 85);
         assertEq(tag1, TAG_EXECUTION);
@@ -79,23 +62,11 @@ contract ReputationRegistryTest is Test, IERC721Receiver {
 
         vm.expectEmit(true, true, true, true);
         emit IERC8004Reputation.NewFeedback(
-            agentId,
-            client1,
-            85,
-            TAG_EXECUTION,
-            TAG_DCA,
-            "ipfs://feedback",
-            bytes32(uint256(123))
+            agentId, client1, 85, TAG_EXECUTION, TAG_DCA, "ipfs://feedback", bytes32(uint256(123))
         );
 
         reputationRegistry.giveFeedback(
-            agentId,
-            85,
-            TAG_EXECUTION,
-            TAG_DCA,
-            "ipfs://feedback",
-            bytes32(uint256(123)),
-            ""
+            agentId, 85, TAG_EXECUTION, TAG_DCA, "ipfs://feedback", bytes32(uint256(123)), ""
         );
     }
 
@@ -160,7 +131,7 @@ contract ReputationRegistryTest is Test, IERC721Receiver {
         vm.stopPrank();
 
         // Verify it's revoked
-        (,, , bool isRevoked) = reputationRegistry.readFeedback(agentId, client1, 0);
+        (,,, bool isRevoked) = reputationRegistry.readFeedback(agentId, client1, 0);
         assertTrue(isRevoked);
     }
 
@@ -202,11 +173,7 @@ contract ReputationRegistryTest is Test, IERC721Receiver {
 
         // Agent owner responds
         reputationRegistry.appendResponse(
-            agentId,
-            client1,
-            0,
-            "ipfs://response",
-            bytes32(uint256(456))
+            agentId, client1, 0, "ipfs://response", bytes32(uint256(456))
         );
 
         // Verify response count
@@ -220,20 +187,10 @@ contract ReputationRegistryTest is Test, IERC721Receiver {
         reputationRegistry.giveFeedback(agentId, 85, TAG_EXECUTION, TAG_DCA, "", bytes32(0), "");
 
         vm.expectEmit(true, true, false, true);
-        emit IERC8004Reputation.ResponseAppended(
-            agentId,
-            client1,
-            0,
-            owner,
-            "ipfs://response"
-        );
+        emit IERC8004Reputation.ResponseAppended(agentId, client1, 0, owner, "ipfs://response");
 
         reputationRegistry.appendResponse(
-            agentId,
-            client1,
-            0,
-            "ipfs://response",
-            bytes32(uint256(456))
+            agentId, client1, 0, "ipfs://response", bytes32(uint256(456))
         );
     }
 
@@ -249,12 +206,8 @@ contract ReputationRegistryTest is Test, IERC721Receiver {
 
         // Get summary
         address[] memory empty = new address[](0);
-        (uint64 count, uint8 avgScore) = reputationRegistry.getSummary(
-            agentId,
-            empty,
-            bytes32(0),
-            bytes32(0)
-        );
+        (uint64 count, uint8 avgScore) =
+            reputationRegistry.getSummary(agentId, empty, bytes32(0), bytes32(0));
 
         assertEq(count, 2);
         assertEq(avgScore, 90); // (80 + 100) / 2
@@ -271,12 +224,8 @@ contract ReputationRegistryTest is Test, IERC721Receiver {
 
         // Get summary - should only count the non-revoked feedback
         address[] memory empty = new address[](0);
-        (uint64 count, uint8 avgScore) = reputationRegistry.getSummary(
-            agentId,
-            empty,
-            bytes32(0),
-            bytes32(0)
-        );
+        (uint64 count, uint8 avgScore) =
+            reputationRegistry.getSummary(agentId, empty, bytes32(0), bytes32(0));
 
         assertEq(count, 1);
         assertEq(avgScore, 100);
@@ -290,12 +239,8 @@ contract ReputationRegistryTest is Test, IERC721Receiver {
 
         // Get summary filtered by DCA tag
         address[] memory empty = new address[](0);
-        (uint64 count, uint8 avgScore) = reputationRegistry.getSummary(
-            agentId,
-            empty,
-            bytes32(0),
-            TAG_DCA
-        );
+        (uint64 count, uint8 avgScore) =
+            reputationRegistry.getSummary(agentId, empty, bytes32(0), TAG_DCA);
 
         assertEq(count, 1);
         assertEq(avgScore, 80);
@@ -312,12 +257,8 @@ contract ReputationRegistryTest is Test, IERC721Receiver {
         address[] memory clients = new address[](1);
         clients[0] = client1;
 
-        (uint64 count, uint8 avgScore) = reputationRegistry.getSummary(
-            agentId,
-            clients,
-            bytes32(0),
-            bytes32(0)
-        );
+        (uint64 count, uint8 avgScore) =
+            reputationRegistry.getSummary(agentId, clients, bytes32(0), bytes32(0));
 
         assertEq(count, 1);
         assertEq(avgScore, 80);
@@ -341,13 +282,7 @@ contract ReputationRegistryTest is Test, IERC721Receiver {
     function test_GetDetailedFeedback() public {
         vm.prank(client1);
         reputationRegistry.giveFeedback(
-            agentId,
-            85,
-            TAG_EXECUTION,
-            TAG_DCA,
-            "ipfs://details",
-            bytes32(uint256(789)),
-            ""
+            agentId, 85, TAG_EXECUTION, TAG_DCA, "ipfs://details", bytes32(uint256(789)), ""
         );
 
         (
@@ -382,13 +317,7 @@ contract ReputationRegistryTest is Test, IERC721Receiver {
             bytes32[] memory tag1s,
             bytes32[] memory tag2s,
             bool[] memory revokedStatuses
-        ) = reputationRegistry.readAllFeedback(
-            agentId,
-            empty,
-            bytes32(0),
-            bytes32(0),
-            true
-        );
+        ) = reputationRegistry.readAllFeedback(agentId, empty, bytes32(0), bytes32(0), true);
 
         assertEq(clientAddrs.length, 2);
         assertEq(scores[0], 80);
@@ -409,15 +338,7 @@ contract ReputationRegistryTest is Test, IERC721Receiver {
         vm.assume(score <= 100);
 
         vm.prank(client1);
-        reputationRegistry.giveFeedback(
-            agentId,
-            score,
-            TAG_EXECUTION,
-            TAG_DCA,
-            "",
-            bytes32(0),
-            ""
-        );
+        reputationRegistry.giveFeedback(agentId, score, TAG_EXECUTION, TAG_DCA, "", bytes32(0), "");
 
         (uint8 storedScore,,,) = reputationRegistry.readFeedback(agentId, client1, 0);
         assertEq(storedScore, score);
@@ -427,11 +348,8 @@ contract ReputationRegistryTest is Test, IERC721Receiver {
         vm.prank(client1);
         reputationRegistry.giveFeedback(agentId, 85, tag1, tag2, "", bytes32(0), "");
 
-        (, bytes32 storedTag1, bytes32 storedTag2,) = reputationRegistry.readFeedback(
-            agentId,
-            client1,
-            0
-        );
+        (, bytes32 storedTag1, bytes32 storedTag2,) =
+            reputationRegistry.readFeedback(agentId, client1, 0);
         assertEq(storedTag1, tag1);
         assertEq(storedTag2, tag2);
     }

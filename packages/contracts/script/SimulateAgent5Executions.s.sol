@@ -8,7 +8,8 @@ import "../src/interfaces/IAgentExecution.sol";
 /**
  * @title SimulateAgent5Executions
  * @notice Simulates trade executions for MomentumMaster (Agent 5)
- * @dev Run with: forge script script/SimulateAgent5Executions.s.sol --rpc-url $SEPOLIA_RPC_URL --broadcast
+ * @dev Run with: forge script script/SimulateAgent5Executions.s.sol --rpc-url $SEPOLIA_RPC_URL
+ * --broadcast
  */
 contract SimulateAgent5Executions is Script {
     // Deployed contract addresses on Sepolia
@@ -37,16 +38,16 @@ contract SimulateAgent5Executions is Script {
         vm.startBroadcast(agent5Key);
 
         // 7 wins, 3 losses (momentum trading with larger moves)
-        _simulateTrade(execution, DEMO_USER, 800e6, 920e6, true);    // +15% (caught uptrend)
-        _simulateTrade(execution, DEMO_USER, 800e6, 880e6, true);    // +10%
-        _simulateTrade(execution, DEMO_USER, 800e6, 720e6, false);   // -10% (trend reversal)
-        _simulateTrade(execution, DEMO_USER, 800e6, 960e6, true);    // +20% (strong momentum)
-        _simulateTrade(execution, DEMO_USER, 800e6, 850e6, true);    // +6.25%
-        _simulateTrade(execution, DEMO_USER, 800e6, 700e6, false);   // -12.5% (whipsaw)
-        _simulateTrade(execution, DEMO_USER, 800e6, 900e6, true);    // +12.5%
-        _simulateTrade(execution, DEMO_USER, 800e6, 680e6, false);   // -15% (false breakout)
-        _simulateTrade(execution, DEMO_USER, 800e6, 1000e6, true);   // +25% (big trend)
-        _simulateTrade(execution, DEMO_USER, 800e6, 870e6, true);    // +8.75%
+        _simulateTrade(execution, DEMO_USER, 800e6, 920e6, true); // +15% (caught uptrend)
+        _simulateTrade(execution, DEMO_USER, 800e6, 880e6, true); // +10%
+        _simulateTrade(execution, DEMO_USER, 800e6, 720e6, false); // -10% (trend reversal)
+        _simulateTrade(execution, DEMO_USER, 800e6, 960e6, true); // +20% (strong momentum)
+        _simulateTrade(execution, DEMO_USER, 800e6, 850e6, true); // +6.25%
+        _simulateTrade(execution, DEMO_USER, 800e6, 700e6, false); // -12.5% (whipsaw)
+        _simulateTrade(execution, DEMO_USER, 800e6, 900e6, true); // +12.5%
+        _simulateTrade(execution, DEMO_USER, 800e6, 680e6, false); // -15% (false breakout)
+        _simulateTrade(execution, DEMO_USER, 800e6, 1000e6, true); // +25% (big trend)
+        _simulateTrade(execution, DEMO_USER, 800e6, 870e6, true); // +8.75%
 
         vm.stopBroadcast();
         console.log("  Completed 10 trades (7 wins, 3 losses)");
@@ -75,7 +76,9 @@ contract SimulateAgent5Executions is Script {
             user,
             amountIn,
             amountOut,
-            success ? IAgentExecution.ExecutionResult.SUCCESS : IAgentExecution.ExecutionResult.FAILURE
+            success
+                ? IAgentExecution.ExecutionResult.SUCCESS
+                : IAgentExecution.ExecutionResult.FAILURE
         );
     }
 }

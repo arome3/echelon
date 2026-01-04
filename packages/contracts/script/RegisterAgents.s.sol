@@ -60,8 +60,8 @@ contract RegisterAgents is Script {
         uint256 fundManagerId = registry.registerAgent(
             deployerWallet,
             "Echelon Fund Manager",
-            "MeanReversion",  // Strategy type for orchestrator
-            5,  // Medium risk - balanced portfolio allocation
+            "MeanReversion", // Strategy type for orchestrator
+            5, // Medium risk - balanced portfolio allocation
             "ipfs://QmFundManager"
         );
         console.log("Registered Fund Manager (ID:", fundManagerId, ") - Pure Orchestrator");
@@ -73,7 +73,7 @@ contract RegisterAgents is Script {
             agent1Wallet,
             "AlphaYield",
             "Yield",
-            7,  // Higher risk - aggressive yield farming
+            7, // Higher risk - aggressive yield farming
             "ipfs://QmAlphaYield"
         );
         console.log("Registered AlphaYield (ID:", agent1Id, ")");
@@ -85,7 +85,7 @@ contract RegisterAgents is Script {
             agent2Wallet,
             "ArbitrageKing",
             "Arbitrage",
-            8,  // High risk - fast-paced arbitrage
+            8, // High risk - fast-paced arbitrage
             "ipfs://QmArbitrageKing"
         );
         console.log("Registered ArbitrageKing (ID:", agent2Id, ")");
@@ -97,7 +97,7 @@ contract RegisterAgents is Script {
             agent3Wallet,
             "DCAWizard",
             "DCA",
-            3,  // Low risk - steady accumulation
+            3, // Low risk - steady accumulation
             "ipfs://QmDCAWizard"
         );
         console.log("Registered DCAWizard (ID:", agent3Id, ")");
@@ -109,7 +109,7 @@ contract RegisterAgents is Script {
             agent4Wallet,
             "MomentumMaster",
             "Momentum",
-            6,  // Medium-high risk - trend following
+            6, // Medium-high risk - trend following
             "ipfs://QmMomentumMaster"
         );
         console.log("Registered MomentumMaster (ID:", agent4Id, ")");

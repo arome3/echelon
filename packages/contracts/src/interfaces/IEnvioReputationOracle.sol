@@ -24,7 +24,10 @@ interface IEnvioReputationOracle {
      * @return score The reputation score (0-100)
      * @return lastUpdated Timestamp of the last update (0 if never updated)
      */
-    function getAgentReputation(address agent) external view returns (uint8 score, uint256 lastUpdated);
+    function getAgentReputation(address agent)
+        external
+        view
+        returns (uint8 score, uint256 lastUpdated);
 
     /**
      * @notice Get the default neutral score for new agents
