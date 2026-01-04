@@ -4,6 +4,7 @@ export * from "./useExecutions";
 export * from "./usePermissions";
 export * from "./useUser";
 export * from "./useGrantPermission";
+export * from "./useGrantReputationGatedPermission";
 export * from "./useRevokePermission";
 export * from "./useDelegation";
 export * from "./useSmartAccount";

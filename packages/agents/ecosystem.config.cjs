@@ -68,9 +68,53 @@ module.exports = {
     },
 
     // ============================================
-    // Fund Manager Agent (Optional)
+    // Fund Manager Redelegation Service
     // ============================================
-    // Uncomment to run the Fund Manager agent
+    // Monitors for new permissions and auto-redelegates to specialists
+    {
+      name: 'fund-manager-redelegation',
+      script: 'npx',
+      args: 'tsx src/services/fund-manager-redelegation.ts',
+      cwd: __dirname,
+
+      // Environment variables
+      env: {
+        NODE_ENV: 'development',
+      },
+      env_production: {
+        NODE_ENV: 'production',
+      },
+
+      // Restart policy
+      autorestart: true,
+      max_restarts: 10,
+      restart_delay: 5000,  // 5 seconds between restarts
+
+      // Exponential backoff on repeated failures
+      exp_backoff_restart_delay: 100,
+
+      // Watch for file changes (dev only)
+      watch: false,
+
+      // Logging
+      log_date_format: 'YYYY-MM-DD HH:mm:ss Z',
+      error_file: 'logs/fund-manager-redelegation-error.log',
+      out_file: 'logs/fund-manager-redelegation-out.log',
+      merge_logs: true,
+
+      // Resource limits
+      max_memory_restart: '500M',
+
+      // Graceful shutdown
+      kill_timeout: 5000,
+      wait_ready: true,
+      listen_timeout: 10000,
+    },
+
+    // ============================================
+    // Fund Manager Agent (Optional - Full Agent)
+    // ============================================
+    // Uncomment to run the full Fund Manager agent with trading logic
     // {
     //   name: 'fund-manager',
     //   script: 'npx',

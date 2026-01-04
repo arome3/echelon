@@ -104,6 +104,8 @@ export function useAgentDetails(
     variables: { agentId },
     skip: !agentId,
     pollInterval,
+    // Fetch fresh data from network while returning cached data immediately
+    fetchPolicy: 'cache-and-network',
     // Don't notify on network status change to prevent re-renders during polling
     notifyOnNetworkStatusChange: false,
   });

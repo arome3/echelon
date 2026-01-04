@@ -51,7 +51,7 @@ export function RedelegationStats({
       <Card className={className} padding={compact ? "sm" : "md"}>
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-base">
-            <GitBranch className="h-4 w-4 text-primary-600" />
+            <GitBranch className="h-4 w-4 text-violet-400" />
             A2A Statistics
           </CardTitle>
         </CardHeader>
@@ -70,7 +70,7 @@ export function RedelegationStats({
       <Card className={className} padding={compact ? "sm" : "md"}>
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-base">
-            <GitBranch className="h-4 w-4 text-primary-600" />
+            <GitBranch className="h-4 w-4 text-violet-400" />
             A2A Statistics
           </CardTitle>
         </CardHeader>
@@ -88,7 +88,7 @@ export function RedelegationStats({
       <Card className={className} padding={compact ? "sm" : "md"}>
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-base">
-            <GitBranch className="h-4 w-4 text-primary-600" />
+            <GitBranch className="h-4 w-4 text-violet-400" />
             A2A Statistics
           </CardTitle>
         </CardHeader>
@@ -113,8 +113,8 @@ export function RedelegationStats({
         {/* Delegated Out (as Parent) */}
         <StatItem
           icon={<ArrowUpRight className="h-4 w-4" />}
-          iconBg="bg-blue-50"
-          iconColor="text-blue-600"
+          iconBg="bg-blue-500/20"
+          iconColor="text-blue-400"
           label="Delegated Out"
           value={formatAmount(stats.totalDelegatedOut.toString()) + " USDC"}
           subtext={`to ${stats.childAgentCount} specialist${stats.childAgentCount !== 1 ? "s" : ""}`}
@@ -124,8 +124,8 @@ export function RedelegationStats({
         {/* Delegated In (as Child) */}
         <StatItem
           icon={<ArrowDownLeft className="h-4 w-4" />}
-          iconBg="bg-green-50"
-          iconColor="text-green-600"
+          iconBg="bg-green-500/20"
+          iconColor="text-green-400"
           label="Delegated In"
           value={formatAmount(stats.totalDelegatedIn.toString()) + " USDC"}
           subtext={`from ${stats.parentAgentCount} manager${stats.parentAgentCount !== 1 ? "s" : ""}`}
@@ -136,8 +136,8 @@ export function RedelegationStats({
         {stats.topChild && (
           <StatItem
             icon={<TrendingUp className="h-4 w-4" />}
-            iconBg="bg-purple-50"
-            iconColor="text-purple-600"
+            iconBg="bg-purple-500/20"
+            iconColor="text-purple-400"
             label="Top Specialist"
             value={stats.topChild.name}
             subtext={formatAmount(stats.topChild.amount) + " USDC"}
@@ -154,8 +154,8 @@ export function RedelegationStats({
         {stats.topParent && (
           <StatItem
             icon={<Users className="h-4 w-4" />}
-            iconBg="bg-orange-50"
-            iconColor="text-orange-600"
+            iconBg="bg-orange-500/20"
+            iconColor="text-orange-400"
             label="Top Manager"
             value={stats.topParent.name}
             subtext={formatAmount(stats.topParent.amount) + " USDC"}
@@ -171,14 +171,14 @@ export function RedelegationStats({
 
       {/* Quick list of child agents (if acting as parent) */}
       {asParent.length > 0 && (
-        <div className="mt-4 pt-4 border-t border-gray-100">
-          <p className="text-xs font-medium text-gray-500 mb-2">Active Specialists</p>
+        <div className="mt-4 pt-4 border-t border-white/10">
+          <p className="text-xs font-medium text-gray-400 mb-2">Active Specialists</p>
           <div className="flex flex-wrap gap-2">
             {asParent.slice(0, 5).map((redel: any) => (
               <Link
                 key={redel.id}
                 href={`/agents/${redel.childAgent.id}`}
-                className="inline-flex items-center gap-1.5 px-2 py-1 bg-gray-50 hover:bg-gray-100 rounded-full text-xs font-medium text-gray-700 transition-colors"
+                className="inline-flex items-center gap-1.5 px-2 py-1 bg-white/5 hover:bg-white/10 rounded-full text-xs font-medium text-gray-300 transition-colors"
               >
                 <span
                   className="w-2 h-2 rounded-full"
@@ -190,7 +190,7 @@ export function RedelegationStats({
               </Link>
             ))}
             {asParent.length > 5 && (
-              <span className="inline-flex items-center px-2 py-1 text-xs text-gray-500">
+              <span className="inline-flex items-center px-2 py-1 text-xs text-gray-400">
                 +{asParent.length - 5} more
               </span>
             )}
@@ -232,15 +232,15 @@ function StatItem({
   compact = false,
 }: StatItemProps) {
   const valueClassName = cn(
-    "font-bold text-gray-900 truncate block",
+    "font-bold text-gray-100 truncate block",
     compact ? "text-sm" : "text-lg",
-    valueLink && "hover:text-primary-600 transition-colors cursor-pointer"
+    valueLink && "hover:text-primary-400 transition-colors cursor-pointer"
   );
 
   return (
     <div
       className={cn(
-        "rounded-lg bg-gray-50",
+        "rounded-lg bg-white/5",
         compact ? "p-3" : "p-4"
       )}
     >
@@ -264,7 +264,7 @@ function StatItem({
           </span>
         )}
       </div>
-      <p className={cn("text-gray-500", compact ? "text-[10px]" : "text-xs")}>
+      <p className={cn("text-gray-400", compact ? "text-[10px]" : "text-xs")}>
         {label}
       </p>
       {valueLink ? (
@@ -274,7 +274,7 @@ function StatItem({
       ) : (
         <span className={valueClassName}>{value}</span>
       )}
-      <p className={cn("text-gray-400 truncate", compact ? "text-[10px]" : "text-xs")}>
+      <p className={cn("text-gray-500 truncate", compact ? "text-[10px]" : "text-xs")}>
         {subtext}
       </p>
     </div>

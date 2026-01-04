@@ -72,7 +72,7 @@ interface DashboardContentProps {
 function DashboardContent({ address }: DashboardContentProps) {
   const [activeTab, setActiveTab] = useState<DashboardTab>("overview");
   const [showDelegationFlow, setShowDelegationFlow] = useState(false);
-  const { user, permissions: indexedPermissions, executions, loading, error } =
+  const { user, permissions: indexedPermissions, executions, loading, error, refetch } =
     useUserDashboard(address);
 
   // Also fetch permissions directly from MetaMask Flask
@@ -227,7 +227,7 @@ function DashboardContent({ address }: DashboardContentProps) {
                 <SectionErrorBoundary sectionName="Permissions">
                   <PermissionList
                     permissions={(permissions || []).slice(0, 3)}
-                    onPermissionRevoked={() => {}}
+                    onPermissionRevoked={() => refetch()}
                   />
                 </SectionErrorBoundary>
 
@@ -260,7 +260,7 @@ function DashboardContent({ address }: DashboardContentProps) {
               <SectionErrorBoundary sectionName="Permission List">
                 <PermissionList
                   permissions={permissions || []}
-                  onPermissionRevoked={() => {}}
+                  onPermissionRevoked={() => refetch()}
                 />
               </SectionErrorBoundary>
             </div>

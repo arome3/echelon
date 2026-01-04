@@ -1,0 +1,77 @@
+# ============================================
+# Fund Manager Redelegation Service - Dockerfile
+# ============================================
+# Monitors for new permissions and auto-delegates to specialists
+#
+# Build:   docker build -f Dockerfile.fund-manager -t echelon-fund-manager .
+# Run:     docker run --env-file .env echelon-fund-manager
+#
+# Required environment variables:
+#   - PRIVATE_KEY: Fund Manager wallet private key
+#   - EXECUTION_ADDRESS: AgentExecution contract address
+#   - ENVIO_URL: Envio GraphQL endpoint
+#   - RPC_URL: Ethereum RPC endpoint
+# ============================================
+
+FROM node:20-alpine AS builder
+
+WORKDIR /app
+
+# Copy package files
+COPY package*.json ./
+
+# Install dependencies
+RUN npm ci
+
+# Copy source code
+COPY src/ ./src/
+COPY tsconfig.json ./
+
+# Build TypeScript
+RUN npm run build
+
+# ============================================
+# Production image
+# ============================================
+FROM node:20-alpine AS runner
+
+WORKDIR /app
+
+# Create non-root user for security
+RUN addgroup -g 1001 -S echelon && \
+    adduser -S echelon -u 1001
+
+# Copy built application
+COPY --from=builder /app/node_modules ./node_modules
+COPY --from=builder /app/dist ./dist
+COPY --from=builder /app/package.json ./
+
+# Copy source for tsx (development mode)
+COPY --from=builder /app/src ./src
+COPY --from=builder /app/tsconfig.json ./
+
+# Install tsx for development mode execution
+RUN npm install -g tsx
+
+# Create logs directory with proper permissions
+RUN mkdir -p /app/logs && chown -R echelon:echelon /app
+
+# Switch to non-root user
+USER echelon
+
+# Environment variables (override with --env-file or -e)
+ENV NODE_ENV=production
+ENV POLL_INTERVAL_MS=10000
+ENV MAX_RETRIES=3
+ENV RETRY_DELAY_MS=1000
+ENV HEALTH_PORT=3100
+
+# Expose health check port
+EXPOSE 3100
+
+# Health check - use the HTTP health endpoint
+HEALTHCHECK --interval=30s --timeout=10s --start-period=10s --retries=3 \
+    CMD wget --no-verbose --tries=1 --spider http://localhost:3100/health || exit 1
+
+# Run fund manager redelegation service
+CMD ["tsx", "src/services/fund-manager-redelegation.ts"]

@@ -77,6 +77,11 @@ module.exports = {
         "fade-in": "fadeIn 0.3s ease-out",
         "slide-up": "slideUp 0.3s ease-out",
         "glow-pulse": "glowPulse 2s ease-in-out infinite",
+        // Delegation flow animations
+        "flow-down": "flowDown 1.5s ease-in-out infinite",
+        "bounce-subtle": "bounceSubtle 2s ease-in-out infinite",
+        "pulse-subtle": "pulseSubtle 2s ease-in-out infinite",
+        "ping-slow": "pingSlow 2s cubic-bezier(0, 0, 0.2, 1) infinite",
       },
       keyframes: {
         fadeIn: {
@@ -90,6 +95,27 @@ module.exports = {
         glowPulse: {
           "0%, 100%": { opacity: "0.4" },
           "50%": { opacity: "0.8" },
+        },
+        // Animated flow down the connection lines
+        flowDown: {
+          "0%": { transform: "translateY(-100%)", opacity: "0" },
+          "50%": { opacity: "1" },
+          "100%": { transform: "translateY(100%)", opacity: "0" },
+        },
+        // Subtle bounce for arrows
+        bounceSubtle: {
+          "0%, 100%": { transform: "translateY(0)" },
+          "50%": { transform: "translateY(2px)" },
+        },
+        // Subtle pulse for labels
+        pulseSubtle: {
+          "0%, 100%": { opacity: "1" },
+          "50%": { opacity: "0.8" },
+        },
+        // Slow ping for status indicator
+        pingSlow: {
+          "0%": { transform: "scale(1)", opacity: "1" },
+          "75%, 100%": { transform: "scale(1.5)", opacity: "0" },
         },
       },
       boxShadow: {

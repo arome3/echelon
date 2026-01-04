@@ -71,7 +71,7 @@ export function DelegationTree({
     }
   }, []);
 
-  // Custom node renderer
+  // Custom node renderer (dark theme compatible)
   const renderCustomNode = useCallback(({ nodeDatum }: CustomNodeProps) => {
     const score = nodeDatum.attributes?.score ?? 50;
     const fillColor = getScoreColorHex(score);
@@ -83,7 +83,7 @@ export function DelegationTree({
         <circle
           r={28}
           fill={fillColor}
-          stroke="#374151"
+          stroke="rgba(255,255,255,0.2)"
           strokeWidth={2}
           className="cursor-pointer transition-all hover:stroke-[3px]"
         />
@@ -109,7 +109,7 @@ export function DelegationTree({
           style={{
             fontSize: "13px",
             fontWeight: "600",
-            fill: "#1f2937",
+            fill: "#e2e8f0", // slate-200 for dark theme
           }}
         >
           {nodeDatum.name.length > 15
@@ -124,7 +124,7 @@ export function DelegationTree({
             textAnchor="middle"
             style={{
               fontSize: "10px",
-              fill: "#6b7280",
+              fill: "#94a3b8", // slate-400 for dark theme
             }}
           >
             {nodeDatum.attributes.strategyType}
@@ -139,7 +139,7 @@ export function DelegationTree({
             style={{
               fontSize: "10px",
               fontWeight: "500",
-              fill: "#059669",
+              fill: "#34d399", // emerald-400 for dark theme
             }}
           >
             {formatAmount(nodeDatum.attributes!.amount)} USDC
@@ -149,7 +149,7 @@ export function DelegationTree({
     );
   }, []);
 
-  // Tree configuration
+  // Tree configuration (dark theme)
   const treeConfig = useMemo(
     () => ({
       orientation: "vertical" as const,
@@ -161,7 +161,7 @@ export function DelegationTree({
       collapsible: false,
       zoomable: true,
       draggable: true,
-      pathClassFunc: () => "stroke-gray-300 stroke-2 fill-none",
+      pathClassFunc: () => "stroke-slate-600 stroke-2 fill-none",
     }),
     [translate]
   );
@@ -172,7 +172,7 @@ export function DelegationTree({
       <Card className={className}>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <GitBranch className="h-5 w-5 text-primary-600" />
+            <GitBranch className="h-5 w-5 text-violet-400" />
             A2A Delegation Tree
           </CardTitle>
         </CardHeader>
@@ -187,14 +187,14 @@ export function DelegationTree({
       <Card className={className}>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <GitBranch className="h-5 w-5 text-primary-600" />
+            <GitBranch className="h-5 w-5 text-violet-400" />
             A2A Delegation Tree
           </CardTitle>
         </CardHeader>
         <div className="flex flex-col items-center justify-center h-[200px] text-center">
           <AlertCircle className="h-10 w-10 text-red-400 mb-3" />
-          <p className="text-red-600 font-medium">Error loading delegation tree</p>
-          <p className="text-sm text-gray-500 mt-1">{error.message}</p>
+          <p className="text-red-300 font-medium">Error loading delegation tree</p>
+          <p className="text-sm text-slate-400 mt-1">{error.message}</p>
         </div>
       </Card>
     );
@@ -206,14 +206,14 @@ export function DelegationTree({
       <Card className={className}>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <GitBranch className="h-5 w-5 text-primary-600" />
+            <GitBranch className="h-5 w-5 text-violet-400" />
             A2A Delegation Tree
           </CardTitle>
         </CardHeader>
         <div className="flex flex-col items-center justify-center h-[200px] text-center">
-          <Users className="h-10 w-10 text-gray-300 mb-3" />
-          <p className="text-gray-500 font-medium">No Active Redelegations</p>
-          <p className="text-sm text-gray-400 mt-1">
+          <Users className="h-10 w-10 text-slate-400 mb-3" />
+          <p className="text-slate-200 font-medium">No Active Redelegations</p>
+          <p className="text-sm text-slate-400 mt-1">
             This agent has not delegated to any specialist agents
           </p>
         </div>
@@ -225,16 +225,16 @@ export function DelegationTree({
     <Card className={cn("overflow-hidden", className)} padding="none">
       <CardHeader className="px-6 pt-6">
         <CardTitle className="flex items-center gap-2">
-          <GitBranch className="h-5 w-5 text-primary-600" />
+          <GitBranch className="h-5 w-5 text-violet-400" />
           A2A Delegation Tree
         </CardTitle>
       </CardHeader>
 
-      {/* Tree Container */}
+      {/* Tree Container - dark theme background */}
       <div
         ref={containerRef}
         style={{ width: "100%", height: `${height}px` }}
-        className="bg-gray-50"
+        className="bg-dark-900/50"
       >
         <Tree
           data={treeData}
@@ -245,21 +245,21 @@ export function DelegationTree({
         />
       </div>
 
-      {/* Legend */}
+      {/* Legend - dark theme */}
       {showLegend && (
-        <div className="px-6 py-4 border-t border-gray-100 bg-white">
+        <div className="px-6 py-4 border-t border-white/[0.06] bg-white/[0.02]">
           <div className="flex flex-wrap justify-center gap-6 text-sm">
             <div className="flex items-center gap-2">
-              <div className="w-4 h-4 rounded-full bg-green-500" />
-              <span className="text-gray-600">Score 80+</span>
+              <div className="w-4 h-4 rounded-full bg-emerald-500" />
+              <span className="text-slate-400">Score 80+</span>
             </div>
             <div className="flex items-center gap-2">
               <div className="w-4 h-4 rounded-full bg-yellow-500" />
-              <span className="text-gray-600">Score 60-79</span>
+              <span className="text-slate-400">Score 60-79</span>
             </div>
             <div className="flex items-center gap-2">
               <div className="w-4 h-4 rounded-full bg-red-500" />
-              <span className="text-gray-600">Score &lt;60</span>
+              <span className="text-slate-400">Score &lt;60</span>
             </div>
           </div>
         </div>
@@ -286,7 +286,7 @@ export function CompactDelegationTree({ agentId, className }: CompactDelegationT
 
   if (!hasChildren || !treeData) {
     return (
-      <div className={cn("text-sm text-gray-500 italic", className)}>
+      <div className={cn("text-sm text-slate-400 italic", className)}>
         No active redelegations
       </div>
     );
@@ -297,8 +297,8 @@ export function CompactDelegationTree({ agentId, className }: CompactDelegationT
   return (
     <div className={cn("flex items-center gap-3", className)}>
       <div className="flex items-center gap-2 text-sm">
-        <GitBranch className="h-4 w-4 text-primary-600" />
-        <span className="font-medium text-gray-700">
+        <GitBranch className="h-4 w-4 text-violet-400" />
+        <span className="font-medium text-slate-300">
           {childCount} Specialist{childCount !== 1 ? "s" : ""}
         </span>
       </div>
@@ -311,7 +311,7 @@ export function CompactDelegationTree({ agentId, className }: CompactDelegationT
             title={child.name}
           >
             <div
-              className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold text-white border-2 border-white hover:z-10 hover:scale-110 transition-transform"
+              className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold text-white border-2 border-dark-800 hover:z-10 hover:scale-110 transition-transform"
               style={{ backgroundColor: getScoreColorHex(child.attributes?.score ?? 50) }}
             >
               {child.attributes?.score ?? "?"}
@@ -319,7 +319,7 @@ export function CompactDelegationTree({ agentId, className }: CompactDelegationT
           </Link>
         ))}
         {childCount > 4 && (
-          <div className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-medium text-gray-600 bg-gray-100 border-2 border-white">
+          <div className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-medium text-slate-400 bg-dark-700 border-2 border-dark-800">
             +{childCount - 4}
           </div>
         )}

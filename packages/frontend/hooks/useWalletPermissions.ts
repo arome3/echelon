@@ -33,6 +33,13 @@ export interface StoredPermission {
   agentReputationScore?: number;
   agentStrategyType?: string;
   agentIsVerified?: boolean;
+  // Reputation-gated permission fields
+  isReputationGated?: boolean;
+  baseAmount?: string;
+  maxAmount?: string;
+  minReputationScore?: number;
+  maxStaleness?: number;
+  encodedTerms?: string;
 }
 
 interface WalletPermission {
@@ -111,21 +118,32 @@ export function getPermissionsFromStorage(): StoredPermission[] {
   }
 }
 
+export function removePermissionFromStorage(permissionId: string): void;
+export function removePermissionFromStorage(userAddress: string, agentAddress: string): void;
 export function removePermissionFromStorage(
-  userAddress: string,
-  agentAddress: string
+  userAddressOrPermissionId: string,
+  agentAddress?: string
 ): void {
   if (typeof window === "undefined") return;
 
   try {
     const existing = getPermissionsFromStorage();
-    const filtered = existing.filter(
-      (p) =>
-        !(
-          p.userAddress.toLowerCase() === userAddress.toLowerCase() &&
-          p.agentAddress.toLowerCase() === agentAddress.toLowerCase()
-        )
-    );
+    let filtered: StoredPermission[];
+
+    if (agentAddress) {
+      // Remove by user + agent address
+      filtered = existing.filter(
+        (p) =>
+          !(
+            p.userAddress.toLowerCase() === userAddressOrPermissionId.toLowerCase() &&
+            p.agentAddress.toLowerCase() === agentAddress.toLowerCase()
+          )
+      );
+    } else {
+      // Remove by permission ID
+      filtered = existing.filter((p) => p.id !== userAddressOrPermissionId);
+    }
+
     localStorage.setItem(PERMISSIONS_STORAGE_KEY, JSON.stringify(filtered));
   } catch (err) {
     console.error("Failed to remove permission from localStorage:", err);

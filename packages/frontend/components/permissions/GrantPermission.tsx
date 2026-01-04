@@ -22,15 +22,19 @@ import { AgentTrustIndicator, getAgentBadgeType } from "@/components/agents/Veri
 import type { Agent } from "@/lib/types";
 
 // ===========================================
-// Reputation Constants
+// Reputation Constants (Envio-Indexed Performance Gating)
 // ===========================================
 
 /** Minimum reputation score for full trust (no warnings) */
 const REPUTATION_THRESHOLD_HIGH = 60;
-/** Minimum reputation score for basic trust (warning only) */
-const REPUTATION_THRESHOLD_LOW = 30;
-/** Block delegation to agents below this reputation unless verified */
-const REPUTATION_THRESHOLD_BLOCK = 10;
+/** Minimum reputation score for basic trust (warning + acknowledgment required) */
+const REPUTATION_THRESHOLD_LOW = 46;
+/**
+ * ENVIO_SAFETY_GATE: Hard block threshold based on Envio-indexed performance data.
+ * Agents below this score cannot receive delegations regardless of user acknowledgment.
+ * This makes Envio mission-critical for user safety - the button is completely disabled.
+ */
+const ENVIO_SAFETY_GATE = 25;
 
 // ===========================================
 // GrantPermission Component
@@ -220,15 +224,17 @@ function PermissionForm({ agent, onSuccess }: PermissionFormProps) {
     token: TOKENS.USDC as `0x${string}`,
   });
 
-  // Reputation-based trust checks
+  // Reputation-based trust checks (Envio-indexed performance gating)
   const reputationScore = agent.reputationScore || 0;
   const isVerified = agent.isVerified || false;
   const badgeType = getAgentBadgeType(isVerified, reputationScore);
 
-  // Determine if we should warn or block
+  // Determine if we should warn or hard-block based on Envio data
   const isLowReputation = reputationScore < REPUTATION_THRESHOLD_LOW && !isVerified;
-  const isVeryLowReputation = reputationScore < REPUTATION_THRESHOLD_BLOCK && !isVerified;
-  const needsRiskAcknowledgment = isLowReputation && !acknowledgeRisk;
+  // ENVIO_SAFETY_GATE: Hard block - cannot delegate regardless of acknowledgment
+  const isBlockedByEnvio = reputationScore < ENVIO_SAFETY_GATE && !isVerified;
+  // Only require acknowledgment for low reputation agents that aren't hard-blocked
+  const needsRiskAcknowledgment = isLowReputation && !isBlockedByEnvio && !acknowledgeRisk;
 
   // Check if balance is lower than the amount being authorized
   const userBalance = usdcBalance ? parseFloat(usdcBalance.formatted) : 0;
@@ -323,35 +329,39 @@ function PermissionForm({ agent, onSuccess }: PermissionFormProps) {
         </span>
       </div>
 
-      {/* Low Reputation Warning */}
-      {isLowReputation && (
-        <div className={cn(
-          "p-4 rounded-lg border",
-          isVeryLowReputation
-            ? "bg-red-500/10 border-red-500/30"
-            : "bg-orange-500/10 border-orange-500/30"
-        )}>
+      {/* Envio Safety Gate - Hard Block */}
+      {isBlockedByEnvio && (
+        <div className="p-4 rounded-lg border bg-red-500/10 border-red-500/30">
           <div className="flex gap-3">
-            <ShieldAlert className={cn(
-              "w-5 h-5 flex-shrink-0",
-              isVeryLowReputation ? "text-red-400" : "text-orange-400"
-            )} />
+            <ShieldAlert className="w-5 h-5 flex-shrink-0 text-red-400" />
             <div className="space-y-2">
-              <p className={cn(
-                "font-medium",
-                isVeryLowReputation ? "text-red-300" : "text-orange-300"
-              )}>
-                {isVeryLowReputation
-                  ? "Very Low Reputation Agent"
-                  : "Low Reputation Agent"}
+              <p className="font-medium text-red-300">
+                Delegation Blocked - Insufficient Performance Score
               </p>
-              <p className={cn(
-                "text-sm",
-                isVeryLowReputation ? "text-red-400/80" : "text-orange-400/80"
-              )}>
-                {isVeryLowReputation
-                  ? "This agent has very low or no reputation. Consider delegating to a verified or higher-reputation agent."
-                  : "This agent has limited track record. Proceed with caution and consider starting with a small amount."}
+              <p className="text-sm text-red-400/80">
+                This agent&apos;s Envio-indexed performance score ({reputationScore}) is below the safety threshold of {ENVIO_SAFETY_GATE}.
+                Delegation is disabled to protect your funds.
+              </p>
+              <p className="text-xs text-red-400/60 mt-2">
+                The agent must improve their on-chain performance metrics (win rate, profitability, volume) to unlock delegations.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Low Reputation Warning - Acknowledgment Required */}
+      {isLowReputation && !isBlockedByEnvio && (
+        <div className="p-4 rounded-lg border bg-orange-500/10 border-orange-500/30">
+          <div className="flex gap-3">
+            <ShieldAlert className="w-5 h-5 flex-shrink-0 text-orange-400" />
+            <div className="space-y-2">
+              <p className="font-medium text-orange-300">
+                Low Reputation Agent
+              </p>
+              <p className="text-sm text-orange-400/80">
+                This agent has a limited track record (score: {reputationScore}/100).
+                Proceed with caution and consider starting with a small amount.
               </p>
 
               {/* Risk Acknowledgment Checkbox */}
@@ -360,17 +370,9 @@ function PermissionForm({ agent, onSuccess }: PermissionFormProps) {
                   type="checkbox"
                   checked={acknowledgeRisk}
                   onChange={(e) => setAcknowledgeRisk(e.target.checked)}
-                  className={cn(
-                    "mt-0.5 w-4 h-4 rounded border bg-dark-800",
-                    isVeryLowReputation
-                      ? "border-red-500/50 text-red-500 focus:ring-red-500/50"
-                      : "border-orange-500/50 text-orange-500 focus:ring-orange-500/50"
-                  )}
+                  className="mt-0.5 w-4 h-4 rounded border bg-dark-800 border-orange-500/50 text-orange-500 focus:ring-orange-500/50"
                 />
-                <span className={cn(
-                  "text-sm",
-                  isVeryLowReputation ? "text-red-300" : "text-orange-300"
-                )}>
+                <span className="text-sm text-orange-300">
                   I understand the risks and want to proceed with this delegation
                 </span>
               </label>
@@ -530,10 +532,12 @@ function PermissionForm({ agent, onSuccess }: PermissionFormProps) {
       <Button
         className="w-full"
         onClick={() => setShowConfirm(true)}
-        disabled={needsRiskAcknowledgment}
+        disabled={isBlockedByEnvio || needsRiskAcknowledgment}
       >
         <Shield className="w-4 h-4 mr-2" />
-        {needsRiskAcknowledgment
+        {isBlockedByEnvio
+          ? `Blocked - Score Below ${ENVIO_SAFETY_GATE}`
+          : needsRiskAcknowledgment
           ? "Acknowledge Risk to Continue"
           : "Grant Permission"}
       </Button>

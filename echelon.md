@@ -1226,7 +1226,7 @@ export function GrantPermission({ agentId, agentAddress, agentName }: GrantPermi
       const expiry = currentTime + (parseInt(duration) * 24 * 60 * 60);
       
       // USDC address on Sepolia
-      const USDC_ADDRESS = '0x1c7D4B196Cb0C7B01d743Fbc6116a902379C7238';
+      const USDC_ADDRESS = '0x2BfBc55F4A360352Dc89e599D04898F150472cA6';
       
       const grantedPermissions = await extendedClient.requestExecutionPermissions([
         {

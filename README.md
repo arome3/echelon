@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="echelon-banner.jpg" alt="Echelon - Meritocratic Agent Protocol" width="600">
+</p>
+
 # Echelon
 
 **Trustless AI Agent Marketplace with Performance-Gated Permissions**
@@ -11,6 +15,7 @@ Echelon is a decentralized marketplace where AI agents compete for user permissi
 - **Agent Hierarchy**: A2A redelegation allows fund managers to hire specialists
 - **Instant Revocation**: Users maintain full control and can revoke permissions instantly
 - **Decentralized Registry**: ERC-8004 compliant agent identity system
+- **Comprehensive Testing**: 200 Foundry tests across all contracts
 
 ## Tech Stack
 
@@ -29,13 +34,35 @@ Echelon is a decentralized marketplace where AI agents compete for user permissi
 ```
 echelon/
 ├── packages/
-│   ├── contracts/    # Foundry smart contracts
-│   ├── indexer/      # Envio indexer
-│   ├── frontend/     # Next.js application
-│   └── agents/       # Demo agent implementations
-├── docs/             # Documentation
-└── scripts/          # Utility scripts
+│   ├── contracts/          # Foundry smart contracts
+│   │   ├── src/
+│   │   │   ├── AgentRegistry.sol
+│   │   │   ├── AgentExecution.sol
+│   │   │   ├── ReputationRegistry.sol
+│   │   │   ├── ValidationRegistry.sol
+│   │   │   ├── PermissionRegistry.sol
+│   │   │   ├── EnvioReputationOracle.sol
+│   │   │   └── enforcers/
+│   │   │       └── ReputationGateEnforcer.sol
+│   │   └── test/           # 200 Foundry tests
+│   ├── indexer/            # Envio HyperIndex (15+ entities)
+│   ├── frontend/           # Next.js application
+│   └── agents/             # Agent service implementations
+├── docs/                   # Documentation (14 guides)
+└── PROJECT_DESCRIPTION.md  # Detailed project description
 ```
+
+## Smart Contracts
+
+| Contract | Description |
+|----------|-------------|
+| `AgentRegistry.sol` | ERC-8004 compliant agent registry with ERC-721 NFT identity |
+| `AgentExecution.sol` | Execution logging, A2A redelegation tracking |
+| `ReputationRegistry.sol` | ERC-8004 feedback and reputation system |
+| `ValidationRegistry.sol` | Third-party validator requests and responses |
+| `PermissionRegistry.sol` | On-chain bridge for ERC-7715 permissions |
+| `EnvioReputationOracle.sol` | On-chain reputation synced from Envio indexer |
+| `ReputationGateEnforcer.sol` | Dynamic permission limits based on reputation |
 
 ## Quick Start
 
@@ -63,8 +90,9 @@ Echelon uses ERC-7715 Advanced Permissions, which requires MetaMask Flask (not r
    - Flask should auto-detect Sepolia network
    - If not, add manually: Chain ID `11155111`, RPC: `https://sepolia.infura.io/v3/YOUR_KEY`
 
-4. **Get Test ETH**
+4. **Get Test ETH & USDC**
    - Use [Sepolia Faucet](https://sepoliafaucet.com/) to get test ETH
+   - USDC can be obtained from Circle's testnet faucet
 
 ### Installation
 
@@ -94,6 +122,7 @@ pnpm dev
 pnpm frontend:dev    # Start frontend
 pnpm indexer:dev     # Start indexer
 pnpm contracts:test  # Run contract tests
+pnpm agents:start    # Start agent services
 ```
 
 ### Build
@@ -120,7 +149,36 @@ pnpm deploy:indexer
 pnpm deploy:frontend
 ```
 
-### Oracle Sync Service
+## Testing
+
+The project includes **200 comprehensive Foundry tests** covering all smart contracts:
+
+```bash
+# Run all tests
+cd packages/contracts
+forge test
+
+# Run with verbosity
+forge test -vvv
+
+# Run specific test file
+forge test --match-contract AgentRegistryTest
+```
+
+| Test Suite | Tests | Coverage |
+|------------|-------|----------|
+| PermissionRegistryTest | 42 | Permission recording, revocation, expiry |
+| AgentRegistryTest | 39 | ERC-8004 registration, metadata, verification |
+| ReputationGateEnforcerTest | 29 | Dynamic limits, caveat enforcement |
+| EnvioReputationOracleTest | 28 | Score updates, batch operations |
+| ValidationRegistryTest | 23 | Validator requests/responses |
+| ReputationRegistryTest | 21 | Feedback system |
+| AgentExecutionTest | 18 | Execution logging, redelegation |
+| **Total** | **200** | |
+
+Tests include unit tests, fuzz tests (256 runs), and revert condition tests.
+
+## Oracle Sync Service
 
 The Oracle Sync service bridges reputation scores from the Envio indexer to the on-chain oracle, enabling reputation-gated permissions. See [docs/13-oracle-sync-service.md](./docs/13-oracle-sync-service.md) for full documentation.
 
@@ -143,11 +201,33 @@ See `.env.example` for required environment variables:
 
 - `NEXT_PUBLIC_ALCHEMY_API_KEY` - Alchemy RPC provider
 - `NEXT_PUBLIC_PIMLICO_API_KEY` - Pimlico bundler
-- `ENVIO_API_KEY` - Envio indexer
+- `NEXT_PUBLIC_REGISTRY_ADDRESS` - AgentRegistry contract address
+- `NEXT_PUBLIC_EXECUTION_ADDRESS` - AgentExecution contract address
 - `PRIVATE_KEY` - Deployer wallet (DO NOT COMMIT!)
+
+## Network Configuration
+
+| Parameter | Value |
+|-----------|-------|
+| Network | Sepolia Testnet |
+| Chain ID | `11155111` |
+| USDC Address | `0x1c7D4B196Cb0C7B01d743Fbc6116a902379C7238` |
+
+## Deployed Contracts (Sepolia)
+
+| Contract | Address |
+|----------|---------|
+| AgentRegistry | `0x9d60b078a01bD8afE7A4d8E2cEd02fcDb2Af1848` |
+| AgentExecution | `0x0D2871A9BbF7e76De188A480Dc823d7681397dD8` |
+| ReputationRegistry | `0x986acF45e1475c6c386B78E9f57E642E052bAffd` |
+| ValidationRegistry | `0xA0674693Bee9754B0FcEfA8921dfCbf8Ddb7bc16` |
+| PermissionRegistry | `0x113B560d7DCCa2d325DD3305195a02e096e35CC3` |
+| EnvioReputationOracle | `0x00EEC585Aa6f948107FCe7B36FD4bB07774B4B3a` |
+| DelegationManager (MetaMask) | `0xdb9B1e94B5b69Df7e401DDbedE43491141047dB3` |
 
 ## Documentation
 
+### Core Documentation
 - [Project Setup](./docs/00-project-setup.md)
 - [Smart Contracts](./docs/01-smart-contracts.md)
 - [Envio Indexer](./docs/02-envio-indexer.md)
@@ -156,13 +236,17 @@ See `.env.example` for required environment variables:
 - [Agent Implementation](./docs/05-agent-implementation.md)
 - [A2A Delegation](./docs/06-a2a-delegation.md)
 - [Reputation System](./docs/07-reputation-system.md)
+
+### Additional Guides
+- [GraphQL API](./docs/08-graphql-api.md)
+- [User Dashboard](./docs/09-user-dashboard.md)
+- [Security](./docs/10-security.md)
+- [Testing](./docs/11-testing.md)
+- [Deployment](./docs/12-deployment.md)
 - [Oracle Sync Service](./docs/13-oracle-sync-service.md)
 
-## Network
-
-- **Target Network**: Sepolia Testnet
-- **Chain ID**: 11155111
-- **USDC Address**: `0x1c7D4B196Cb0C7B01d743Fbc6116a902379C7238`
+### Hackathon
+- [Project Description](./PROJECT_DESCRIPTION.md)
 
 ## Related Standards
 
@@ -173,11 +257,17 @@ See `.env.example` for required environment variables:
 
 ## Hackathon
 
-This project was built for the **MetaMask Advanced Permissions Hackathon**.
+This project was built for the **MetaMask Advanced Permissions Dev Cook-Off**.
 
 **Tracks:**
 - Most Creative Use of Advanced Permissions
 - Best Use of Envio
+
+**Key Innovations:**
+- First A2A (Agent-to-Agent) delegation implementation
+- Reputation-gated permission scaling
+- 15+ indexed entities powering real-time frontend
+- On-chain oracle syncing reputation from indexer
 
 **Demo Requirements:**
 - MetaMask Flask 13.5.0+ installed

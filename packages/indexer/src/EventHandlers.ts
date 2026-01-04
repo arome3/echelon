@@ -1254,6 +1254,7 @@ PermissionRegistry.PermissionGranted.handler(async ({ event, context }) => {
 
 /**
  * Handle permission revoked events.
+ * Also deactivates any child redelegations if the revoked permission was to an orchestrator (Fund Manager).
  */
 PermissionRegistry.PermissionRevoked.handler(async ({ event, context }) => {
   const permissionId = bytes32ToHex(event.params.permissionId);
@@ -1303,6 +1304,38 @@ PermissionRegistry.PermissionRevoked.handler(async ({ event, context }) => {
       lastUpdated: blockTimestamp,
     });
 
+    // Check if the revoked permission was to an orchestrator (Fund Manager)
+    // If so, deactivate all child redelegations for this user
+    if (permission.agent_id) {
+      const agent = await context.Agent.get(permission.agent_id);
+
+      if (agent && agent.isOrchestrator) {
+        // Find and deactivate all active redelegations from this agent for this user
+        const userRedelegations = await context.Redelegation.getWhere.user_id.eq(userAddress);
+
+        if (userRedelegations && userRedelegations.length > 0) {
+          let deactivatedCount = 0;
+
+          for (const redelegation of userRedelegations) {
+            // Only deactivate if it's from this orchestrator and still active
+            if (redelegation.parentAgent_id === permission.agent_id && redelegation.isActive) {
+              context.Redelegation.set({
+                ...redelegation,
+                isActive: false,
+              });
+              deactivatedCount++;
+            }
+          }
+
+          if (deactivatedCount > 0) {
+            context.log.info(
+              `Deactivated ${deactivatedCount} orphaned redelegations for user ${userAddress} from orchestrator ${permission.agent_id}`
+            );
+          }
+        }
+      }
+    }
+
     context.log.info(
       `Permission revoked: ${permissionId} from ${userAddress} to ${agentAddress}`
     );
@@ -1311,6 +1344,7 @@ PermissionRegistry.PermissionRevoked.handler(async ({ event, context }) => {
 
 /**
  * Handle permission expired events.
+ * Also deactivates any child redelegations if the expired permission was to an orchestrator (Fund Manager).
  */
 PermissionRegistry.PermissionExpired.handler(async ({ event, context }) => {
   const permissionId = bytes32ToHex(event.params.permissionId);
@@ -1356,6 +1390,38 @@ PermissionRegistry.PermissionExpired.handler(async ({ event, context }) => {
           : BigInt(0),
       lastUpdated: blockTimestamp,
     });
+
+    // Check if the expired permission was to an orchestrator (Fund Manager)
+    // If so, deactivate all child redelegations for this user
+    if (permission.agent_id) {
+      const agent = await context.Agent.get(permission.agent_id);
+
+      if (agent && agent.isOrchestrator) {
+        // Find and deactivate all active redelegations from this agent for this user
+        const userRedelegations = await context.Redelegation.getWhere.user_id.eq(userAddress);
+
+        if (userRedelegations && userRedelegations.length > 0) {
+          let deactivatedCount = 0;
+
+          for (const redelegation of userRedelegations) {
+            // Only deactivate if it's from this orchestrator and still active
+            if (redelegation.parentAgent_id === permission.agent_id && redelegation.isActive) {
+              context.Redelegation.set({
+                ...redelegation,
+                isActive: false,
+              });
+              deactivatedCount++;
+            }
+          }
+
+          if (deactivatedCount > 0) {
+            context.log.info(
+              `Deactivated ${deactivatedCount} orphaned redelegations for user ${userAddress} from orchestrator ${permission.agent_id} (permission expired)`
+            );
+          }
+        }
+      }
+    }
 
     context.log.info(
       `Permission expired: ${permissionId} from ${userAddress} to ${agentAddress}`

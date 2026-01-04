@@ -219,11 +219,14 @@ function DelegationFlowVisualization({ treeData, userAddress }: DelegationFlowVi
         <UserNode address={treeData.id} />
       </div>
 
-      {/* Connection Line */}
+      {/* Connection Line - Animated Flow */}
       <div className="flex justify-center">
         <div className="flex flex-col items-center">
-          <div className="w-0.5 h-6 bg-gradient-to-b from-primary-400 to-primary-500" />
-          <ArrowDown className="w-4 h-4 text-primary-400 -mt-1" />
+          <div className="w-0.5 h-6 bg-gradient-to-b from-primary-400 to-primary-500 relative overflow-hidden">
+            {/* Animated pulse flowing down */}
+            <div className="absolute inset-0 bg-gradient-to-b from-transparent via-white/40 to-transparent animate-flow-down" />
+          </div>
+          <ArrowDown className="w-4 h-4 text-primary-400 -mt-1 animate-bounce-subtle" />
         </div>
       </div>
 
@@ -368,15 +371,25 @@ function AgentNodeWithRedelegations({ agent, userAddress, showArrow }: AgentNode
       {/* Redelegations (A2A) */}
       {hasChildren && redelegationData?.children && (
         <div className="mt-8">
-          {/* Connection Line */}
+          {/* Connection Line - Animated A2A Flow */}
           <div className="flex justify-center mb-4">
             <div className="flex flex-col items-center">
-              <div className="w-0.5 h-6 bg-gradient-to-b from-purple-400 to-purple-500" />
-              <div className="px-3 py-1 bg-purple-500/20 rounded-full text-xs text-purple-300 border border-purple-500/30">
-                A2A Delegation (ERC-7710)
+              {/* Upper line with flow animation */}
+              <div className="w-0.5 h-6 bg-gradient-to-b from-purple-400 to-purple-500 relative overflow-hidden">
+                <div className="absolute inset-0 bg-gradient-to-b from-transparent via-white/40 to-transparent animate-flow-down" />
               </div>
-              <div className="w-0.5 h-4 bg-purple-500" />
-              <ArrowDown className="w-4 h-4 text-purple-400 -mt-1" />
+              {/* A2A Label with glow effect */}
+              <div className="px-3 py-1.5 bg-purple-500/20 rounded-full text-xs font-medium text-purple-300 border border-purple-500/30 shadow-lg shadow-purple-500/20 animate-pulse-subtle">
+                <span className="flex items-center gap-1.5">
+                  <span className="w-1.5 h-1.5 rounded-full bg-purple-400 animate-ping-slow" />
+                  A2A Delegation (ERC-7710)
+                </span>
+              </div>
+              {/* Lower line with flow animation */}
+              <div className="w-0.5 h-4 bg-purple-500 relative overflow-hidden">
+                <div className="absolute inset-0 bg-gradient-to-b from-transparent via-white/40 to-transparent animate-flow-down" />
+              </div>
+              <ArrowDown className="w-4 h-4 text-purple-400 -mt-1 animate-bounce-subtle" />
             </div>
           </div>
 

@@ -1,7 +1,6 @@
 "use client";
 
 import { AlertCircle } from "lucide-react";
-import { toast } from "sonner";
 import { useAgentDetails } from "@/hooks/useAgents";
 import { AgentHeader } from "@/components/agents/AgentHeader";
 import { PerformanceMetrics } from "@/components/agents/PerformanceMetrics";
@@ -160,17 +159,10 @@ export default function AgentPage({ params }: AgentPageProps) {
               <ReputationGatedPermission
                 agentAddress={agent.walletAddress}
                 agentName={agent.name}
+                agentId={id}
                 currentScore={agent.reputationScore}
                 tokenSymbol="USDC"
                 decimals={6}
-                onSubmit={async (params) => {
-                  // Show coming soon notification
-                  toast.info("Reputation-Gated Permissions Coming Soon!", {
-                    description: "This advanced feature with on-chain reputation scoring is under development. Use the 'Grant Permission' card above for standard permissions.",
-                    duration: 6000,
-                  });
-                  console.log("Reputation-gated permission params:", params);
-                }}
               />
             </SectionErrorBoundary>
           </div>

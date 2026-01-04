@@ -232,9 +232,15 @@ export function useGrantPermission(): UseGrantPermissionReturn {
         const currentTime = Math.floor(Date.now() / 1000);
         const expiry = currentTime + expiryDays * 24 * 60 * 60;
 
-        // Build justification message
-        const periodLabel = getPeriodLabel(periodDuration);
-        const defaultJustification = `Echelon AI Agent: ${amount} ${getTokenSymbol(tokenAddress)} per ${periodLabel.toLowerCase()}`;
+        // Build justification message - DEMO REQUIREMENT: Make constraints highly specific and visible
+        // Format: "Allow [Agent] to spend Max [Amount] [Token] every [Duration] for [Purpose]"
+        const explicitDuration = getExplicitDuration(periodDuration);
+        const agentDisplayName = agentName || "AI Agent";
+        const strategyPurpose = getStrategyPurpose(agentStrategyType, agentDisplayName);
+
+        // Granular justification that shows exactly what the permission allows
+        // This is what appears in the MetaMask Flask popup - the "star of the show"
+        const defaultJustification = `Allow ${agentDisplayName} to spend Max ${amount} ${getTokenSymbol(tokenAddress)} every ${explicitDuration} for ${strategyPurpose}`;
 
         // Show toast to guide user - ERC-7715 doesn't auto-popup like regular txs
         toast.info("Check MetaMask Flask to approve the permission request", {
@@ -540,6 +546,61 @@ function getPeriodLabel(seconds: number): string {
       return "Month";
     default:
       return `${seconds} seconds`;
+  }
+}
+
+/**
+ * Get explicit time duration for MetaMask popup display
+ * Makes the permission constraints highly visible and specific
+ */
+function getExplicitDuration(seconds: number): string {
+  switch (seconds) {
+    case PERIOD_DURATIONS.HOURLY:
+      return "1 Hour";
+    case PERIOD_DURATIONS.DAILY:
+      return "24 Hours";
+    case PERIOD_DURATIONS.WEEKLY:
+      return "7 Days";
+    case PERIOD_DURATIONS.MONTHLY:
+      return "30 Days";
+    default:
+      return `${seconds} seconds`;
+  }
+}
+
+/**
+ * Get human-readable strategy purpose for the permission justification
+ * Maps agent strategy types to clear action descriptions
+ *
+ * @param strategyType - The agent's strategy type
+ * @param agentName - The agent's name (used to detect orchestrator agents)
+ */
+function getStrategyPurpose(strategyType?: string, agentName?: string): string {
+  if (!strategyType) return "AI-managed trading";
+
+  // Special case: Fund Manager is an orchestration agent that delegates to specialists
+  // It analyzes market conditions and re-delegates via ERC-7710 A2A delegation
+  const isFundManager = agentName?.toLowerCase().includes("fund manager") ||
+                        agentName?.toLowerCase().includes("echelon fund");
+  if (isFundManager) {
+    return "intelligent portfolio allocation across specialist agents via A2A delegation";
+  }
+
+  switch (strategyType.toLowerCase()) {
+    case "dca":
+      return "Dollar Cost Averaging purchases";
+    case "arbitrage":
+      return "Arbitrage opportunity execution";
+    case "yield":
+      return "Yield Farming optimization";
+    case "momentum":
+      return "Momentum-based trading";
+    case "meanreversion":
+      return "Mean Reversion strategy execution";
+    case "gridtrading":
+      return "Grid Trading order placement";
+    default:
+      return `${strategyType} strategy execution`;
   }
 }
 
