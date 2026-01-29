@@ -7,7 +7,7 @@ import {
   DollarSign,
   Zap,
 } from "lucide-react";
-import { cn, formatAmount, formatDisplayAmount, formatPercent } from "@/lib/utils";
+import { cn, formatAmount, formatDisplayAmount } from "@/lib/utils";
 import type { User } from "@/lib/types";
 
 // ===========================================
@@ -60,7 +60,7 @@ export function UserStats({ user, className }: UserStatsProps) {
             : "bg-gradient-to-br from-red-500/20 to-red-600/10"
         }
         label="Total Profit/Loss"
-        value={`${isProfit ? "+" : ""}${formatDisplayAmount(user.totalProfitFromAgents || "0")} USDC`}
+        value={`${isProfit ? "+" : ""}${formatAmount(user.totalProfitFromAgents || "0")} USDC`}
         valueColor={isProfit ? "text-emerald-400" : "text-red-400"}
         glowColor={isProfit ? "green" : "red"}
       />
@@ -168,7 +168,7 @@ export function CompactUserStats({ user, className }: CompactUserStatsProps) {
         <span className={isProfit ? "text-emerald-400" : "text-red-400"}>
           <strong>
             {isProfit ? "+" : ""}
-            {formatDisplayAmount(user.totalProfitFromAgents || "0")}
+            {formatAmount(user.totalProfitFromAgents || "0")}
           </strong>{" "}
           USDC
         </span>
